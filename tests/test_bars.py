@@ -113,6 +113,36 @@ def test_first_bar_is_never_flagged_as_a_gap():
     assert out["t_end"][0] == 6 * S
 
 
+def test_a_price_never_crosses_a_gap():
+    """A trade-only event after a long silence must not be priced pre-gap.
+
+    The book is seen once at t=1 s (mid 100), then nothing for a minute,
+    then a trade arrives with no book message of its own. The resuming bar
+    belongs to a new segment, so pricing it at 100 would date its mid to
+    before the gap and let a forward return start from a stale price. The
+    honest mid is NaN until the book is observed inside the new segment.
+    """
+    b = build(max_gap_s=5.0)
+    b.on_event(S, ofi=1.0, state=state(100.0))
+    b.on_event(61 * S, tflow=2.0, is_book_event=False)
+    out = b.finish()
+    assert list(out["seg"]) == [0, 1]
+    assert list(out["is_gap"]) == [0, 1]
+    assert out["mid"][0] == pytest.approx(100.0)
+    assert np.isnan(out["mid"][1]), "resuming bar was priced before the gap"
+    assert out["tflow"][1] == pytest.approx(2.0)   # the flow itself is kept
+
+
+def test_a_book_observation_inside_the_new_segment_prices_it_again():
+    b = build(max_gap_s=5.0)
+    b.on_event(S, ofi=1.0, state=state(100.0))
+    b.on_event(61 * S, tflow=2.0, is_book_event=False)
+    b.on_event(61 * S + S // 2, ofi=1.0, state=state(120.0))
+    out = b.finish()
+    assert list(out["seg"]) == [0, 1]
+    assert out["mid"][1] == pytest.approx(120.0)
+
+
 def test_trades_add_flow_without_counting_as_book_events():
     b = build()
     b.on_event(S // 4, ofi=2.0, state=state(100.0))
