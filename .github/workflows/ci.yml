@@ -43,10 +43,21 @@ jobs:
           make test PYTHON=python 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
+      # `verify` on the real manifest is vacuous today (it lists no files),
+      # so it is run against the committed fixture manifest as well, which
+      # DOES list three. That checks the shipped bytes against the shipped
+      # sha256s on the CI machine -- i.e. that nothing mangled them between
+      # here and Linux -- and it is the only step that runs the verify path
+      # on real input. --strict so "missing" fails rather than passing
+      # quietly; the files are committed, so missing means something is
+      # wrong.
       - name: loader cli smoke (offline)
         run: |
+          set -o pipefail
           python tardis_loader.py --help 2>&1 | tee -a ci.log
           python tardis_loader.py verify --quiet 2>&1 | tee -a ci.log
+          python tardis_loader.py verify --strict \
+            --manifest tests/fixtures/synthetic/manifest.json 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
       # The whole measurement pipeline over the committed synthetic fixture:

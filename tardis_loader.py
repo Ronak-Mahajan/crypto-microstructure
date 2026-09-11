@@ -241,8 +241,13 @@ class HourFiles:
         if hour != self._hour:
             if self._fh is not None:
                 self._fh.close()
+            # newline="\n": the default translates "\n" to os.linesep, so
+            # pulling the same Tardis day on Windows and on Linux produced
+            # files with different bytes and different sha256s. The manifest
+            # is meant to pin the day, not the operating system.
             self._fh = gzip.open(self.dir / f"{hour}.jsonl.gz", "at",
-                                 encoding="utf-8", compresslevel=self.level)
+                                 encoding="utf-8", newline="\n",
+                                 compresslevel=self.level)
             self._hour = hour
         self._fh.write(text)
         self.lines[hour] = self.lines.get(hour, 0) + 1
@@ -496,12 +501,33 @@ def cmd_hash(args) -> int:
     return 0
 
 
+def resolve_key(key: str, manifest_dir: Path) -> Path | None:
+    """Where a manifest key points, or None.
+
+    A relative key is tried against the manifest's OWN directory first and
+    the repo root second -- the rule ofi.run.resolve_path already used.
+    `verify` resolving against the repo root only meant
+    `verify --manifest tests/fixtures/synthetic/manifest.json` reported all
+    three fixture files MISSING while the analysis read the same manifest
+    without trouble, so the one command whose job is to tie a number to
+    exact bytes could not check the one manifest that lists any.
+    """
+    p = Path(key)
+    if p.is_absolute():
+        return p if p.exists() else None
+    for cand in (Path(manifest_dir) / key, ROOT / key):
+        if cand.exists():
+            return cand
+    return None
+
+
 def cmd_verify(args) -> int:
-    manifest = load_manifest(Path(args.manifest))
+    manifest_path = Path(args.manifest)
+    manifest = load_manifest(manifest_path)
     ok = bad = missing = 0
     for key, entry in manifest["files"].items():
-        path = ROOT / key if not Path(key).is_absolute() else Path(key)
-        if not path.exists():
+        path = resolve_key(key, manifest_path.parent)
+        if path is None:
             missing += 1
             if not args.quiet:
                 print(f"MISSING {key}", flush=True)

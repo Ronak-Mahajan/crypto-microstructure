@@ -230,8 +230,12 @@ class GzWriter(threading.Thread):
                 cur[1].close()
             d = self.root / venue / product
             d.mkdir(parents=True, exist_ok=True)
+            # newline="\n": the default (None) translates every "\n" to
+            # os.linesep, so the same recorder wrote CRLF-terminated NDJSON
+            # on Windows and LF on Linux. The manifest's sha256 is supposed
+            # to identify the capture, not the machine that ran it.
             fh = gzip.open(d / f"{hour}.jsonl.gz", "at", encoding="utf-8",
-                           compresslevel=self.compresslevel)
+                           newline="\n", compresslevel=self.compresslevel)
             cur = [hour, fh, 0]
             self._files[key] = cur
         cur[1].write(text)

@@ -107,3 +107,9 @@ def test_writer_thread_roundtrip(tmp_path):
     assert rows[1]["m"]["type"] == "heartbeat"
     with gzip.open(tmp_path / "coinbase" / "ETH-USD" / "20250801-00.jsonl.gz", "rt") as fh:
         assert json.loads(fh.readline())["m"] == {"x": 1}
+    # LF, not os.linesep: a day recorded on Windows and the same day
+    # recorded on Linux must be the same bytes, or the manifest sha256
+    # identifies the machine rather than the capture
+    raw = gzip.open(btc / "20250801-00.jsonl.gz", "rb").read()
+    assert b"\r" not in raw
+    assert raw.count(b"\n") == 501
