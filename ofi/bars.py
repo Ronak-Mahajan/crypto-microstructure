@@ -11,6 +11,10 @@ Rules (each one is a test in tests/test_bars.py):
   yields NO bars for the silent span. The next bar starts a new segment
   (`seg` increments) and carries is_gap == 1. Nothing is ever fabricated
   for time the record does not cover.
+* A price never crosses a break either: the carried book state is dropped
+  with the segment, so a new segment's first bar is NaN-priced until a book
+  observation is made inside it. Otherwise a trade arriving after a long
+  silence would open a bar priced at the pre-gap mid.
 * Forward returns are only ever formed within one segment (inference.py).
 
 Bar fields (all numpy arrays of equal length after `finish()`):
@@ -56,11 +60,21 @@ class BarBuilder:
         The open bar (if any) is closed with what it has; no bars are
         emitted for the span up to the next event, and that event opens a
         new segment.
+
+        The carried book state is dropped too. Without that, a segment
+        opened by an event that carries no state -- a trade arriving after
+        a long silence, with no book message of its own -- would emit a bar
+        stamped after the gap but priced before it, and a forward return
+        measured from that bar would start from a mid that is as old as the
+        gap. A new segment may only be priced by a book observation made
+        inside it; until one arrives the mid is NaN, which every consumer
+        already drops.
         """
         if self.bar_end is not None and self.last_t is not None:
             self._emit(self.bar_end)
         self.bar_end = None
         self.pending_break = True
+        self.state = None
         self._reset_accum()
         if t_ns is not None:
             self.last_t = int(t_ns)
