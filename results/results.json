@@ -24,5 +24,6 @@
  "n_manifest_files": 0,
  "days": [],
  "pooled": null,
- "skipped": []
+ "skipped": [],
+ "command": "make results"
 }

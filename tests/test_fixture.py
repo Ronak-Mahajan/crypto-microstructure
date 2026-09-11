@@ -179,8 +179,14 @@ def test_full_run_produces_a_report_whose_fee_hurdle_is_negative(tmp_path):
     assert "| 0.00% |" in text or "0.00%" in text
     assert "share of OOS" in text
     assert "tied)" in text, "a tied plateau must be declared in the table"
+    # every table in the real generated report must render: same cell count
+    # in the header, the separator and every body row
+    from test_report import assert_tables_well_formed
+    assert_tables_well_formed(text, expect_at_least=5)
     loaded = json.loads(js.read_text(encoding="utf-8"))
     assert loaded["pooled"]["n_days"] == 1
+    # nothing that lands in a committed artifact may carry an absolute path
+    assert loaded["manifest"] == "tests/fixtures/synthetic/manifest.json"
 
 
 def test_report_says_so_when_no_day_is_analysable(tmp_path):

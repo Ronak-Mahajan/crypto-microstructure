@@ -11,11 +11,83 @@ good one.
 """
 from __future__ import annotations
 
+import re
+
 from ofi import report
 
 PARAMS = {"bar_s": 1.0, "max_gap_s": 5.0, "k_levels": 5,
           "horizons_s": [1, 10], "n_folds": 3, "expanding": True,
           "n_boot": 10, "seed": 0, "decile": 0.1}
+
+_SEP_RE = re.compile(r"\s*\|[\s:|-]+\|\s*\Z")
+
+
+def md_cells(row: str) -> list[str]:
+    r"""Split one GFM table row on UNESCAPED pipes (`\|` is a literal pipe)."""
+    s = row.strip()
+    if s.startswith("|"):
+        s = s[1:]
+    if s.endswith("|") and not s.endswith("\\|"):
+        s = s[:-1]
+    out: list[str] = []
+    cur: list[str] = []
+    esc = False
+    for ch in s:
+        if esc:
+            cur.append(ch)
+            esc = False
+        elif ch == "\\":
+            cur.append(ch)
+            esc = True
+        elif ch == "|":
+            out.append("".join(cur))
+            cur = []
+        else:
+            cur.append(ch)
+    out.append("".join(cur))
+    return out
+
+
+def md_tables(text: str) -> list[tuple[int, list[str], list[str], list[list[str]]]]:
+    """Every markdown table as (line_no, header, separator, body rows)."""
+    lines = text.splitlines()
+    tables = []
+    i = 0
+    while i < len(lines):
+        if (lines[i].strip().startswith("|") and i + 1 < len(lines)
+                and _SEP_RE.fullmatch(lines[i + 1])):
+            hdr, sep = md_cells(lines[i]), md_cells(lines[i + 1])
+            j = i + 2
+            body = []
+            while j < len(lines) and lines[j].strip().startswith("|"):
+                body.append(md_cells(lines[j]))
+                j += 1
+            tables.append((i + 1, hdr, sep, body))
+            i = j
+        else:
+            i += 1
+    return tables
+
+
+def assert_tables_well_formed(text: str, expect_at_least: int = 1) -> None:
+    """Header, separator and every body row must have the same cell count.
+
+    A bare `|` inside a heading silently ENDS that cell, so a header can end
+    up wider than its separator; GitHub then renders the table with the
+    trailing columns unnamed and every heading after the stray pipe shifted
+    left. It costs nothing to check and it is invisible until someone opens
+    the page.
+    """
+    tables = md_tables(text)
+    assert len(tables) >= expect_at_least, f"only {len(tables)} table(s) found"
+    for line_no, hdr, sep, body in tables:
+        assert len(hdr) == len(sep), (
+            f"table at line {line_no}: {len(hdr)} header cells vs "
+            f"{len(sep)} separator cells: {hdr}")
+        for k, row in enumerate(body):
+            assert len(row) == len(sep), (
+                f"table at line {line_no}, body row {k}: {len(row)} cells "
+                f"vs {len(sep)}: {row}")
 
 
 def _day(key: str, sources: list[str]) -> dict:
@@ -38,15 +110,84 @@ def _results(days: list[dict]) -> dict:
             "skipped": []}
 
 
+def _pooled_with_hurdle() -> dict:
+    """A pooled block shaped exactly like run.hurdle_block's output."""
+    from ofi import fees
+    rec = {"h_s": 1, "h_bars": 1, "n_valid": 100, "insufficient": False,
+           "r2_oos": -0.001, "n_test": 100, "n_folds_used": 3,
+           "sign_agreement": (3, 3), "fold_r2": [], "fold_beta": [],
+           "hac_beta": 0.01, "hac_se": 0.005, "hac_t": 2.0,
+           "hac_bandwidth": 7, "insample_r2": 0.01, "ci": (-0.01, 0.01),
+           "edge": None}
+    hurdle = {("ofi", 1): {"edge_bps": 0.04, "ci": (0.02, 0.06),
+                           "pred_bps": 0.06, "n": 10, "n_pool": 100,
+                           "frac": 0.1, "n_at_threshold": 4,
+                           "spread_bps": 1.0, "spread_pooled_bps": 1.0,
+                           "rows": fees.hurdle_rows(0.04, 1.0)}}
+    return {"n_days": 1, "bars": 100, "mean_spread_bps": 1.0,
+            "forward": {("ofi", 1): rec}, "hurdle": hurdle}
+
+
+def test_the_cell_splitter_honours_escaped_pipes():
+    """Otherwise the well-formedness guard below would pass vacuously."""
+    assert md_cells(r"| a | b |") == [" a ", " b "]
+    assert md_cells(r"| mean \|pred\| (bps) | x |") == \
+        [r" mean \|pred\| (bps) ", " x "]
+
+
+def test_every_table_in_a_report_is_well_formed():
+    r = _results([_day("coinbase/BTC-USD/2001-01-01", ["synthetic"])])
+    r["pooled"] = _pooled_with_hurdle()
+    md = report.build_markdown(r)
+    assert "## (c) Fee hurdle" in md
+    # the fee-hurdle table is the one that broke: `mean |pred| (bps)` written
+    # with bare pipes made its header two cells wider than its own separator
+    assert r"mean \|pred\| (bps)" in md
+    assert_tables_well_formed(md, expect_at_least=5)
+
+
 def test_the_header_names_the_command_that_actually_ran():
-    """`analyze.py day` prints a report too, and must not credit `make
-    results` for numbers `make results` did not produce."""
+    """`analyze.py day` and `make smoke` print reports too, and must not
+    credit `make results` for files `make results` cannot produce."""
     r = _results([_day("coinbase/BTC-USD/2001-01-01", ["synthetic"])])
     assert "by `make results` from" in report.build_markdown(r)
     r["command"] = "python analyze.py day --symbol BTC-USD --day 2001-01-01"
     md = report.build_markdown(r)
     assert "by `python analyze.py day --symbol BTC-USD --day 2001-01-01` from" in md
     assert "make results" not in md.splitlines()[2]
+
+
+def test_the_smoke_run_credits_make_smoke_not_make_results():
+    """`make smoke` and `make results` both call `analyze.py results`, so the
+    subcommand cannot name the target -- the manifest has to. Crediting
+    `make results` at the top of results/self-test/README.md named a command
+    that reads a different manifest and writes a different directory."""
+    import analyze
+
+    class A:
+        manifest = "tests/fixtures/synthetic/manifest.json"
+    assert analyze.reproducing_command(A) == "make smoke"
+    A.manifest = "manifest.json"
+    assert analyze.reproducing_command(A) == "make results"
+    A.manifest = str(analyze.ROOT / "manifest.json")      # the argparse default
+    assert analyze.reproducing_command(A) == "make results"
+    A.manifest = "some/other/manifest.json"
+    assert analyze.reproducing_command(A) == \
+        "python analyze.py results --manifest some/other/manifest.json"
+
+
+def test_a_generated_report_never_carries_an_absolute_path():
+    """`--manifest` defaults to an absolute path; printing it verbatim wrote
+    the operator's home directory into a committed artifact."""
+    import analyze
+    from ofi.run import rel_to_root
+    assert rel_to_root(analyze.ROOT / "manifest.json", analyze.ROOT) == \
+        "manifest.json"
+    assert rel_to_root(analyze.ROOT / "tests" / "fixtures" / "synthetic"
+                       / "manifest.json", analyze.ROOT) == \
+        "tests/fixtures/synthetic/manifest.json"
+    # a manifest outside the repo is left alone rather than mangled
+    assert rel_to_root("/elsewhere/m.json", analyze.ROOT).endswith("m.json")
 
 
 def test_all_synthetic_days_get_the_not_a_market_result_banner():
