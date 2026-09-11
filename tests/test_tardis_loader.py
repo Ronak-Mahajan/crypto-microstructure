@@ -99,6 +99,12 @@ def test_fetch_day_writes_recorder_format(tmp_path):
     assert rows[1]["t_ns"] - rows[0]["t_ns"] == 10 ** 9
     assert rows[2]["m"]["price"] == "1.5"
     assert rows[3]["marker"] == "disconnect" and rows[3]["m"] is None
+    # LF, not os.linesep: pulling the same Tardis day on two operating
+    # systems must give the same bytes, or the manifest sha256 cannot say
+    # which day a published number was computed from
+    raw = gzip.open(out_dir / "20250801-00.jsonl.gz", "rb").read()
+    assert b"\r" not in raw
+    assert raw.count(b"\n") == 4
     assert rows[3]["t_ns"] == rows[2]["t_ns"]           # stamped with last seen
     assert rows[3]["venue"] == "tardis:coinbase"
 
@@ -152,6 +158,44 @@ def test_manifest_roundtrip_and_verify(tmp_path, monkeypatch):
     assert tl.cmd_verify(A()) == 0
     A.strict = True
     assert tl.cmd_verify(A()) == 1
+
+
+def test_verify_resolves_keys_against_the_manifests_own_directory(tmp_path,
+                                                                  monkeypatch):
+    """A manifest that does not sit at the repo root must still verify.
+
+    tests/fixtures/synthetic/manifest.json is exactly that case: its keys
+    are `data/...` relative to itself. ofi.run.resolve_path already tried
+    the manifest's directory first, so the analysis read the fixture fine,
+    while `verify` resolved against the repo root only and called all three
+    files MISSING -- the one command whose job is to tie a number to exact
+    bytes, unable to check the only manifest that lists any. Every existing
+    verify test put the manifest at the root, which is why nothing caught it.
+    """
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    sub = tmp_path / "fixtures" / "synthetic"
+    d = sub / "data" / "coinbase" / "BTC-USD"
+    d.mkdir(parents=True)
+    p = d / "20250801-00.jsonl.gz"
+    with gzip.open(p, "wt", newline="\n") as fh:
+        fh.write('{"t_ns":1,"m":{"type":"snapshot"}}\n')
+    key = "data/coinbase/BTC-USD/20250801-00.jsonl.gz"
+    mpath = sub / "manifest.json"
+    mpath.write_text(json.dumps({
+        "schema": 1, "days": {},
+        "files": {key: {"sha256": tl.sha256_of(p), "bytes": p.stat().st_size,
+                        "source": "synthetic", "exchange": "coinbase",
+                        "symbol": "BTC-USD", "day": "2025-08-01"}}}),
+        encoding="utf-8")
+
+    class A:
+        manifest = str(mpath)
+        strict = True                 # missing must be a failure here
+        quiet = True
+    assert tl.cmd_verify(A()) == 0, "the file is right there next to the manifest"
+    assert tl.resolve_key(key, sub) == p
+    # and a genuinely absent file is still reported, not silently resolved
+    assert tl.resolve_key("data/coinbase/BTC-USD/29991231-23.jsonl.gz", sub) is None
 
 
 def test_hash_adds_recorder_files(tmp_path, monkeypatch):

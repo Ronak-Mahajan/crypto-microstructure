@@ -14,6 +14,7 @@ events so the book rebuild can treat a disconnect marker as a gap boundary:
 from __future__ import annotations
 
 import gzip
+import io
 import json
 from pathlib import Path
 from typing import Iterable, Iterator
@@ -77,13 +78,25 @@ def iter_product(root: Path, venue: str, product: str,
 
 
 def write_lines(path: Path, lines: Iterable[str], compresslevel: int = 6) -> int:
-    """Test/fixture helper: write NDJSON lines (each ending in newline)."""
+    """Test/fixture helper: write NDJSON lines (each ending in newline).
+
+    Byte-for-byte reproducible, which the committed fixture needs: its
+    sha256 is in tests/fixtures/synthetic/manifest.json and is only a
+    statement about the generator if re-running the generator reproduces it.
+    Two things otherwise get in the way, and both are defaults:
+
+    * `newline=None` (what `gzip.open(..., "wt")` passes to TextIOWrapper)
+      translates every "\\n" to os.linesep on write, so the same generator
+      emitted CRLF inside the gzip stream on Windows and LF on Linux.
+    * GzipFile stamps the current time into the gzip header, so the same
+      bytes hashed differently one second later.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     n = 0
-    with gzip.open(path, "wt", encoding="utf-8",
-                   compresslevel=compresslevel) as fh:
-        for ln in lines:
-            fh.write(ln if ln.endswith("\n") else ln + "\n")
-            n += 1
+    with gzip.GzipFile(path, "wb", compresslevel=compresslevel, mtime=0) as gz:
+        with io.TextIOWrapper(gz, encoding="utf-8", newline="\n") as fh:
+            for ln in lines:
+                fh.write(ln if ln.endswith("\n") else ln + "\n")
+                n += 1
     return n

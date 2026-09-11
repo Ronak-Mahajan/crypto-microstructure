@@ -232,6 +232,50 @@ def test_round_trip_through_the_on_disk_format(tmp_path):
     assert stats_disk["n_disconnects"] == stats_mem["n_disconnects"] == 1
 
 
+def test_the_on_disk_format_is_lf_and_byte_reproducible(tmp_path):
+    """The manifest's sha256 is supposed to identify a capture, not the
+    machine that wrote it.
+
+    Both defaults work against that. `gzip.open(..., "wt")` leaves
+    TextIOWrapper on newline=None, which rewrites every "\\n" as os.linesep,
+    so the same generator emitted CRLF inside the gzip on Windows and LF on
+    Linux; and GzipFile stamps the current time into its header, so the same
+    content hashed differently a second later. The committed fixture was
+    written with both defaults in place.
+    """
+    import gzip
+    import hashlib
+    lines = ['{"t_ns":%d,"m":{"x":%d}}' % (i, i) for i in range(25)]
+    # same hour file name, two runs: that is what regenerating a capture or
+    # a fixture looks like. (The gzip header also stores the file NAME, so
+    # the hash is over name plus content -- which is what we want, since the
+    # name is the hour.)
+    a = tmp_path / "run1" / "20010101-00.jsonl.gz"
+    b = tmp_path / "run2" / "20010101-00.jsonl.gz"
+    write_lines(a, lines)
+    raw = gzip.open(a, "rb").read()
+    assert b"\r" not in raw, "CRLF inside the gzip stream"
+    assert raw.count(b"\n") == len(lines)
+    # bytes 4..8 of a gzip member are MTIME; zeroed, so the hash does not
+    # depend on when the file was written (checked directly rather than by
+    # sleeping a second between two writes)
+    assert a.read_bytes()[4:8] == b"\x00\x00\x00\x00"
+    write_lines(b, lines)
+    assert hashlib.sha256(a.read_bytes()).hexdigest() == \
+        hashlib.sha256(b.read_bytes()).hexdigest()
+
+
+def test_the_committed_fixture_is_lf_on_disk():
+    """...and the fixture actually shipped that way, not just new writes."""
+    import gzip
+    from pathlib import Path
+    fix = Path(__file__).resolve().parent / "fixtures" / "synthetic" / "data"
+    files = sorted(fix.rglob("*.jsonl.gz"))
+    assert len(files) == 3
+    for p in files:
+        assert b"\r" not in gzip.open(p, "rb").read(), p.name
+
+
 def test_torn_and_malformed_lines_are_skipped(tmp_path):
     import json
     good = json.dumps({"t_ns": 0, "m": BASE_SNAP})

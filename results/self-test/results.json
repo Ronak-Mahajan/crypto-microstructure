@@ -34,8 +34,8 @@
    "files": [
     {
      "path": "data/coinbase/BTC-USD/20010101-00.jsonl.gz",
-     "sha256": "fded7012d4da",
-     "bytes": 26478
+     "sha256": "e30b57e95f88",
+     "bytes": 26438
     }
    ],
    "missing": [],
