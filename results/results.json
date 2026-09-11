@@ -1,0 +1,28 @@
+{
+ "params": {
+  "bar_s": 1.0,
+  "max_gap_s": 5.0,
+  "k_levels": 5,
+  "horizons_s": [
+   1,
+   5,
+   10,
+   30,
+   60,
+   300
+  ],
+  "n_folds": 4,
+  "expanding": true,
+  "n_boot": 200,
+  "seed": 0,
+  "decile": 0.1,
+  "max_lag_s": 5.0,
+  "book_max_lag_s": 30.0
+ },
+ "manifest": "manifest.json",
+ "manifest_updated_at": null,
+ "n_manifest_files": 0,
+ "days": [],
+ "pooled": null,
+ "skipped": []
+}
