@@ -146,10 +146,13 @@ in a banner above every table. It exists so the pipeline is exercised end
 to end in about two seconds, and so CI fails the moment the pipeline stops
 producing a table.
 
-CI runs `make test`, then the fixture smoke, then asserts the generated
-report really contains all four sections and a numeric OFI row, then runs
-`make results` on the real (currently empty) manifest, which must exit
-green. Failure logs are committed back to the branch under `.ci/`.
+CI (ubuntu) runs `make test`, re-hashes the committed fixture against the
+sha256s in its manifest (`verify --strict`, so the Linux runner confirms
+the shipped bytes are the shipped bytes), then the fixture smoke, then
+asserts the generated report really contains all four sections and a
+numeric OFI row, then runs `make results` on the real (currently empty)
+manifest, which must exit green. Failure logs are committed back to the
+branch under `.ci/`.
 
 ## Ground rules
 
