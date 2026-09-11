@@ -38,6 +38,17 @@ def _results(days: list[dict]) -> dict:
             "skipped": []}
 
 
+def test_the_header_names_the_command_that_actually_ran():
+    """`analyze.py day` prints a report too, and must not credit `make
+    results` for numbers `make results` did not produce."""
+    r = _results([_day("coinbase/BTC-USD/2001-01-01", ["synthetic"])])
+    assert "by `make results` from" in report.build_markdown(r)
+    r["command"] = "python analyze.py day --symbol BTC-USD --day 2001-01-01"
+    md = report.build_markdown(r)
+    assert "by `python analyze.py day --symbol BTC-USD --day 2001-01-01` from" in md
+    assert "make results" not in md.splitlines()[2]
+
+
 def test_all_synthetic_days_get_the_not_a_market_result_banner():
     md = report.build_markdown(_results([_day("coinbase/BTC-USD/2001-01-01",
                                               ["synthetic"])]))
