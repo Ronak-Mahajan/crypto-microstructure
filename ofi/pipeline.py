@@ -1,5 +1,14 @@
 """Messages -> bars for one Coinbase product-day (plus trade streams).
 
+Clock: bars are stamped with the ARRIVAL time `t_ns`, not the venue's own
+`time` field. That is a decision, not an oversight. Arrival time is what a
+trader reacting to the feed actually has, it exists for every message and
+both sources (the recorder stamps it on receipt, Tardis replays its own
+arrival stamp), and it is the same clock on both venues, which the lead-lag
+section needs. Venue time is preserved through ofi.io as `ev[2]` for anyone
+who wants to measure exchange-side batching latency later; nothing in this
+module reads it.
+
 `rebuild(events, ...)` consumes the event stream from ofi.io and drives the
 book, the per-change feature increments and the bar builder. It returns
 the bars and a statistics dict that the report prints per day:
