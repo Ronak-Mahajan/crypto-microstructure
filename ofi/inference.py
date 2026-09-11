@@ -301,22 +301,41 @@ def contemporaneous_r2(mid: np.ndarray, ofi: np.ndarray, seg: np.ndarray,
 # ---------------------------------------------------------------------------
 
 def decile_edge(y: np.ndarray, yhat: np.ndarray, q: float = 0.1) -> dict:
-    """Realised signed move (bps) in the top |prediction| decile.
+    """Realised signed move (bps) where |prediction| clears its 1-q quantile.
 
-    Positions are taken in the direction of the prediction; edge is the
-    mean of sign(yhat) * y over the top-q fraction of |yhat|.
+    Positions are taken in the direction of the prediction; edge is the mean
+    of sign(yhat) * y over the selected rows.
+
+    Ties are NOT broken. A single-feature OLS predicts alpha + beta x, so
+    every bar whose feature is zero gets the SAME prediction; on a feature
+    that is zero most of the time (signed trade flow in a quiet second, OFI
+    in a second with no best-level change) that plateau can be far wider
+    than a decile, and the 1-q quantile can land exactly on it. Selecting
+    `|pred| >= threshold` then returns a third of the sample rather than a
+    tenth. Cutting that block down to exactly q*n would mean ranking rows
+    the model itself ranks equally, so the whole tied block is kept and the
+    realised share is reported instead: `frac` is what was actually traded,
+    and `n_at_threshold` says how much of it sits on the plateau. A `frac`
+    far above q is itself the finding -- the signal has no top decile there.
     """
     ok = np.isfinite(y) & np.isfinite(yhat)
     if ok.sum() < 10:
-        return {"n": int(ok.sum()), "edge_bps": np.nan, "pred_bps": np.nan}
+        return {"n": int(ok.sum()), "n_pool": int(ok.sum()), "frac": np.nan,
+                "edge_bps": np.nan, "pred_bps": np.nan}
     yy, pp = y[ok], yhat[ok]
-    thr = np.quantile(np.abs(pp), 1.0 - q)
-    sel = np.abs(pp) >= thr
+    n_pool = len(yy)
+    a = np.abs(pp)
+    thr = np.quantile(a, 1.0 - q)
+    sel = a >= thr
     if sel.sum() == 0:
-        return {"n": 0, "edge_bps": np.nan, "pred_bps": np.nan}
+        return {"n": 0, "n_pool": n_pool, "frac": 0.0,
+                "edge_bps": np.nan, "pred_bps": np.nan}
     s = np.sign(pp[sel])
-    return {"n": int(sel.sum()), "edge_bps": float((s * yy[sel]).mean()),
-            "pred_bps": float(np.abs(pp[sel]).mean()), "threshold": float(thr)}
+    return {"n": int(sel.sum()), "n_pool": n_pool,
+            "frac": float(sel.sum() / n_pool),
+            "edge_bps": float((s * yy[sel]).mean()),
+            "pred_bps": float(a[sel].mean()), "threshold": float(thr),
+            "n_at_threshold": int((a == thr).sum())}
 
 
 def decile_edge_stat(y: np.ndarray, yhat: np.ndarray, q: float = 0.1) -> float:

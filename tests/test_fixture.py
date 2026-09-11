@@ -160,6 +160,14 @@ def test_full_run_produces_a_report_whose_fee_hurdle_is_negative(tmp_path):
     for rec in hurdle.values():
         takes = [r for r in rec["rows"] if r["scenario"].startswith("take")]
         assert takes and all(r["net_bps"] < 0 for r in takes)
+        # the traded share is declared on every row, and it is a share
+        assert rec["n_pool"] > 0
+        assert rec["frac"] == pytest.approx(rec["n"] / rec["n_pool"])
+        assert 0.0 < rec["frac"] <= 1.0
+    # the fixture's flow features are zero most of the time, so at least one
+    # row must land on a tied plateau -- that is the case the column exists
+    # for, and it must not be silently reported as a clean decile
+    assert any(r["frac"] > 0.15 for r in hurdle.values())
 
     md, js = report.write(res, tmp_path)
     text = md.read_text(encoding="utf-8")
@@ -169,6 +177,8 @@ def test_full_run_produces_a_report_whose_fee_hurdle_is_negative(tmp_path):
         assert heading in text
     assert "synthetic" in text
     assert "| 0.00% |" in text or "0.00%" in text
+    assert "share of OOS" in text
+    assert "tied)" in text, "a tied plateau must be declared in the table"
     loaded = json.loads(js.read_text(encoding="utf-8"))
     assert loaded["pooled"]["n_days"] == 1
 

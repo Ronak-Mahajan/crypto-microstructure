@@ -290,6 +290,8 @@ def hurdle_block(fwd: dict, spread_bps: float) -> dict:
             continue
         out[key] = {"edge_bps": edge["edge_bps"], "ci": edge["ci"],
                     "pred_bps": edge["pred_bps"], "n": edge["n"],
+                    "n_pool": edge.get("n_pool"), "frac": edge.get("frac"),
+                    "n_at_threshold": edge.get("n_at_threshold"),
                     "spread_bps": spread_bps,
                     "rows": fees.hurdle_rows(edge["edge_bps"], spread_bps)}
     return out

@@ -352,3 +352,42 @@ def test_decile_edge_is_negative_when_the_signal_is_backwards():
 
 def test_decile_edge_on_too_few_points():
     assert np.isnan(inf.decile_edge(np.zeros(3), np.zeros(3))["edge_bps"])
+
+
+def test_decile_edge_reports_the_share_it_actually_traded():
+    y = np.array([10.0, -10.0, 0.1, -0.1] * 25)
+    yhat = np.array([1.0, -1.0, 0.01, -0.01] * 25)
+    e = inf.decile_edge(y, yhat, q=0.5)
+    assert e["n_pool"] == 100
+    assert e["n"] == 50
+    assert e["frac"] == pytest.approx(0.5)
+
+
+def test_a_tied_prediction_plateau_is_kept_whole_and_declared():
+    """A single-feature OLS gives every zero-feature bar the same prediction.
+
+    80 of these 100 rows share |pred| = 0.05, which is exactly the 90th
+    percentile, so a top-decile cut cannot return 10 rows without ranking
+    rows the model ranks equally. The whole plateau is kept and `frac` says
+    so; silently returning `n == 10` would be the lie.
+    """
+    pp = np.concatenate([np.full(80, 0.05), np.linspace(0.0, 0.04, 20)])
+    y = np.ones(100)
+    e = inf.decile_edge(y, pp, q=0.1)
+    assert np.quantile(np.abs(pp), 0.9) == pytest.approx(0.05)
+    assert e["n"] == 80
+    assert e["n_at_threshold"] == 80
+    assert e["frac"] == pytest.approx(0.8)
+    assert e["frac"] > 0.1
+
+
+def test_no_tie_means_the_decile_is_a_decile():
+    """With all |predictions| distinct the cut returns exactly a decile."""
+    signs = np.where(np.arange(200) % 2 == 0, 1.0, -1.0)
+    pp = np.linspace(0.01, 1.0, 200) * signs
+    y = np.sign(pp)
+    e = inf.decile_edge(y, pp, q=0.1)
+    assert len(np.unique(np.abs(pp))) == 200        # no ties at all
+    assert e["n"] == 20
+    assert e["frac"] == pytest.approx(0.1)
+    assert e["n_at_threshold"] <= 1
