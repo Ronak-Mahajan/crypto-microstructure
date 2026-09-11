@@ -94,6 +94,8 @@ def cmd_day(args) -> int:
     results = {"params": p, "manifest": args.manifest,
                "manifest_updated_at": manifest.get("updated_at"),
                "n_manifest_files": len(manifest.get("files", {})),
+               "command": f"python analyze.py day --symbol {args.symbol} "
+                          f"--day {args.day}",
                "days": [res], "pooled": None, "skipped": []}
     sys.stdout.write(report.build_markdown(results))
     return 0

@@ -111,7 +111,8 @@ def build_markdown(results: dict) -> str:
     L = []
     L.append("# Results")
     L.append("")
-    L.append(f"Generated {now} by `make results` from `{Path(results['manifest']).as_posix()}` "
+    cmd = results.get("command") or "make results"
+    L.append(f"Generated {now} by `{cmd}` from `{Path(results['manifest']).as_posix()}` "
              f"({results['n_manifest_files']} hashed files). Parameters: "
              f"{p['bar_s']:g} s bars, max gap {p['max_gap_s']:g} s, k = {p['k_levels']} levels, "
              f"{p['n_folds']} purged {'expanding' if p['expanding'] else 'rolling'} folds, "
