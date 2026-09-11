@@ -19,7 +19,7 @@
   "max_lag_s": 5.0,
   "book_max_lag_s": 30.0
  },
- "manifest": "tests\\fixtures\\synthetic\\manifest.json",
+ "manifest": "tests/fixtures/synthetic/manifest.json",
  "manifest_updated_at": "1970-01-01T00:00:00Z",
  "n_manifest_files": 3,
  "days": [
@@ -3561,5 +3561,6 @@
    }
   }
  },
- "skipped": []
+ "skipped": [],
+ "command": "make smoke"
 }

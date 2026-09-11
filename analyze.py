@@ -32,7 +32,11 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from ofi import report  # noqa: E402
-from ofi.run import DEFAULT_PARAMS, run_results  # noqa: E402
+from ofi.run import DEFAULT_PARAMS, rel_to_root as _rel, run_results  # noqa: E402
+
+
+def rel_to_root(path) -> str:
+    return _rel(path, ROOT)
 
 
 def _params(args) -> dict:
@@ -65,9 +69,32 @@ def _common(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--decile", type=float, default=DEFAULT_PARAMS["decile"])
 
 
+FIXTURE_MANIFEST = "tests/fixtures/synthetic/manifest.json"
+
+
+def reproducing_command(args) -> str:
+    """The command a reader can actually run to regenerate this report.
+
+    Both Makefile targets call `analyze.py results`, so the subcommand does
+    not identify them; the manifest does. `make results` reads
+    manifest.json and writes results/, `make smoke` reads the committed
+    synthetic fixture and writes results/self-test/ -- one cannot produce
+    the other's file. Falling back to a hard-coded "make results" (which is
+    what happened before) printed a command that does not regenerate
+    results/self-test/README.md at the top of results/self-test/README.md.
+    """
+    rel = rel_to_root(args.manifest)
+    if rel == FIXTURE_MANIFEST:
+        return "make smoke"
+    if rel == "manifest.json":
+        return "make results"
+    return f"python analyze.py results --manifest {rel}"
+
+
 def cmd_results(args) -> int:
     results = run_results(Path(args.manifest), args.data_root, _params(args),
                           repo_root=ROOT)
+    results["command"] = reproducing_command(args)
     md, js = report.write(results, Path(args.out))
     print(f"wrote {md} and {js}")
     if not results["days"]:
@@ -91,7 +118,7 @@ def cmd_day(args) -> int:
     hl = {"trades": [q for _, q, _ in groups.get(("hyperliquid", f"{coin}-trades", args.day), {"files": []})["files"]],
           "l2Book": [q for _, q, _ in groups.get(("hyperliquid", f"{coin}-l2Book", args.day), {"files": []})["files"]]}
     res, _ = analyse_day(key, groups[key], hl, p)
-    results = {"params": p, "manifest": args.manifest,
+    results = {"params": p, "manifest": rel_to_root(args.manifest),
                "manifest_updated_at": manifest.get("updated_at"),
                "n_manifest_files": len(manifest.get("files", {})),
                "command": f"python analyze.py day --symbol {args.symbol} "

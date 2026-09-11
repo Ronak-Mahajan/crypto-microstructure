@@ -44,6 +44,23 @@ DEFAULT_PARAMS = {
 # manifest -> days
 # ---------------------------------------------------------------------------
 
+def rel_to_root(path, repo_root: Path | None = None) -> str:
+    """Repo-relative posix path when the path is inside the repo, else as given.
+
+    Anything that reaches results/README.md or results.json goes through
+    this. `analyze.py --manifest` defaults to an ABSOLUTE path, so printing
+    it verbatim stamped the operator's home directory into a generated,
+    committed artifact -- and made results.json differ between machines for
+    no reason. Posix separators because the same file is read on Linux.
+    """
+    root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[1]
+    p = Path(path)
+    try:
+        return p.resolve().relative_to(Path(root).resolve()).as_posix()
+    except (ValueError, OSError):
+        return p.as_posix()
+
+
 def resolve_path(key: str, manifest_dir: Path, repo_root: Path,
                  data_root: Path | None) -> Path | None:
     cands = [manifest_dir / key, repo_root / key]
@@ -247,7 +264,7 @@ def run_results(manifest_path: Path, data_root: Path | None, params: dict,
     groups = days_from_manifest(manifest, manifest_path.parent, repo_root,
                                 Path(data_root) if data_root else None)
     coin_days = {k: g for k, g in groups.items() if k[0] == "coinbase" and g["files"]}
-    results = {"params": p, "manifest": str(manifest_path),
+    results = {"params": p, "manifest": rel_to_root(manifest_path, repo_root),
                "manifest_updated_at": manifest.get("updated_at"),
                "n_manifest_files": len(manifest.get("files", {})),
                "days": [], "pooled": None, "skipped": []}

@@ -227,8 +227,14 @@ def build_markdown(results: dict) -> str:
                  "(the `spread charged` column), not that average, because a "
                  "signal that fires when the book is wide pays the wide spread.")
         L.append("")
+        # `\|` because an unescaped pipe inside a cell ENDS the cell: written
+        # bare, `mean |pred| (bps)` split this header into 16 cells against
+        # the 14 of the separator and the body, and GitHub then dropped the
+        # two right-hand scenario names and shifted every heading after the
+        # CI. Table (c) is the one the README calls the answer that matters,
+        # so it may not be the one that renders wrong.
         L.append("| feature | horizon | n | share of OOS | edge (bps) | 95% CI | "
-                 "mean |pred| (bps) | spread charged (bps) |"
+                 "mean \\|pred\\| (bps) | spread charged (bps) |"
                  + "".join(f" {r['scenario']} |" for r in fees.hurdle_rows(0.0, 0.0)))
         L.append("|---|---|---|---|---|---|---|---|" + "---|" * len(fees.hurdle_rows(0.0, 0.0)))
         for name in FEATURES:
