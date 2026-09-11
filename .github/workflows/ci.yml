@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+      - 'rebuild/**'
+      - 'fix/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: install
+        run: |
+          set -o pipefail
+          python -m pip install --quiet -r requirements.txt pytest 2>&1 | tee -a ci.log
+
+      - name: compile
+        run: |
+          python -m py_compile record.py analyze.py tardis_loader.py 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      - name: tests
+        run: |
+          python -m pytest -q tests 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      - name: loader cli smoke (offline)
+        run: |
+          python tardis_loader.py --help 2>&1 | tee -a ci.log
+          python tardis_loader.py verify --quiet 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      - name: save failure log
+        if: failure() && github.ref != 'refs/heads/main'
+        run: |
+          mkdir -p .ci
+          tail -c 60000 ci.log > .ci/last-failure-test.log || true
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git add .ci/last-failure-test.log
+          git commit -m "ci: failure log [skip ci]" || exit 0
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
