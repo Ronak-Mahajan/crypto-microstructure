@@ -17,7 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # full history: the failure-log step below rebases onto the branch, and
+      # a depth-1 checkout has no merge base to rebase onto once CI has
+      # already written one log back.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -78,6 +83,15 @@ jobs:
             grep -qF 'share of OOS' "$OUT" || { echo "FAIL: fee hurdle does not declare its traded share"; exit 1; }
             grep -qF 'tied)' "$OUT" || { echo "FAIL: tied plateau not declared"; exit 1; }
             grep -qF 'spread charged' "$OUT" || { echo "FAIL: fee hurdle does not show the spread it charged"; exit 1; }
+            # the pipes in `mean |pred| (bps)` must stay escaped: bare, they
+            # end their own cell and the header comes out two cells wider
+            # than the separator, so GitHub renders (c) with the last two
+            # scenario columns unnamed. tests/test_report.py proves the cell
+            # counts match; this is the same check on the shipped artifact.
+            # (tests/test_report.py asserts the cell counts match on the
+            # report this same code generates; this is the cheap check on
+            # the shipped artifact itself.)
+            grep -qF 'mean \|pred\| (bps)' "$OUT" || { echo "FAIL: fee hurdle header pipes are not escaped"; exit 1; }
             echo "smoke table OK: $(wc -l < "$OUT") lines"
           } 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
@@ -92,8 +106,11 @@ jobs:
           make results PYTHON=python OUT=/tmp/results-real NBOOT=20 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
+      # Push events only: on a pull_request, GITHUB_REF_NAME is "<n>/merge",
+      # which is not a branch anyone can push to, so this step would fail a
+      # second time and bury the real failure under a git error.
       - name: save failure log
-        if: failure() && github.ref != 'refs/heads/main'
+        if: failure() && github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
           mkdir -p .ci
           tail -c 60000 ci.log > .ci/last-failure-test.log || true
