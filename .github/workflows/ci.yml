@@ -77,6 +77,7 @@ jobs:
             # off as a clean decile
             grep -qF 'share of OOS' "$OUT" || { echo "FAIL: fee hurdle does not declare its traded share"; exit 1; }
             grep -qF 'tied)' "$OUT" || { echo "FAIL: tied plateau not declared"; exit 1; }
+            grep -qF 'spread charged' "$OUT" || { echo "FAIL: fee hurdle does not show the spread it charged"; exit 1; }
             echo "smoke table OK: $(wc -l < "$OUT") lines"
           } 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
