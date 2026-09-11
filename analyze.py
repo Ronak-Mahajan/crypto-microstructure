@@ -28,8 +28,13 @@ DATA = Path(__file__).resolve().parent / "data" / "coinbase"
 
 
 def iter_messages(product: str):
-    """Yield (t_ns, msg) for one product from all recorded hours, in order."""
-    for path in sorted(glob.glob(str(DATA / "*" / "*.jsonl.gz"))):
+    """Yield (t_ns, msg) for one product from all recorded hours, in order.
+
+    Files live one directory per product (data/coinbase/<product>/) and are
+    ordered by their hour name; marker lines ("m": null) are skipped.
+    """
+    paths = glob.glob(str(DATA / product / "*.jsonl.gz"))
+    for path in sorted(paths, key=lambda p: Path(p).name):
         try:
             with gzip.open(path, "rt", encoding="utf-8") as fh:
                 for line in fh:
@@ -37,7 +42,7 @@ def iter_messages(product: str):
                         d = json.loads(line)
                     except json.JSONDecodeError:
                         continue      # torn final line from a hard stop
-                    m = d["m"]
+                    m = d.get("m")
                     if isinstance(m, dict) and m.get("product_id") == product:
                         yield d["t_ns"], m
         except EOFError:
