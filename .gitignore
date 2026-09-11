@@ -1,7 +1,9 @@
-data/
+/data/
 __pycache__/
 .pytest_cache/
 ci.log
 *.part/
 *.tmp
 .venv/
+
+# generated locally from data the manifest lists; results/ itself is committed
