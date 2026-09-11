@@ -94,6 +94,34 @@ def test_a_dropped_change_shows_up_as_a_snapshot_mismatch():
     assert stats["mismatch_rate_clean_max"] == pytest.approx(0.25)
 
 
+def test_clean_and_gapped_mismatch_maxima_are_reported_separately():
+    """A run with one BAD clean check (25%) and one harmless gapped check (0%).
+
+    The two must not share a maximum: `mismatch_rate_clean_max` is a replay
+    bug and must show 25%, while the after-a-gap statistic must show that
+    gap's own 0% rather than borrowing the clean check's 25%. Before the
+    stats carried a gap-only maximum the report printed the overall max in
+    the after-a-gap column, which hid exactly this case.
+    """
+    truth = snapshot([["99.0", "8"], ["98.0", "9"]],
+                     [["101.0", "4"], ["102.0", "7"]])
+    events = [
+        msg(0, BASE_SNAP),
+        # the diff taking 99.0 from 5 to 8 is never sent -> clean check 25%
+        msg(2 * S, truth),
+        marker(3 * S, "disconnect"),
+        # the reconnect snapshot equals the book, so the gapped check is 0%
+        msg(4 * S, truth),
+    ]
+    _, stats = rebuild(events, bar_s=1.0, max_gap_s=60.0, product="BTC-USD")
+    assert stats["n_checks"] == 2
+    assert stats["n_checks_clean"] == 1
+    assert stats["n_checks_gap"] == 1
+    assert stats["mismatch_rate_clean_max"] == pytest.approx(0.25)
+    assert stats["mismatch_rate_gap_max"] == pytest.approx(0.0)
+    assert stats["mismatch_rate_max"] == pytest.approx(0.25)
+
+
 def test_diffs_before_any_snapshot_are_counted_and_dropped():
     events = [msg(0, l2([["buy", "99.0", "1"]])), msg(S, BASE_SNAP)]
     bars, stats = rebuild(events, product="BTC-USD")

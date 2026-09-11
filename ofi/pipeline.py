@@ -162,4 +162,19 @@ def rebuild(events: Iterable[tuple], bar_s: float = 1.0, max_gap_s: float = 5.0,
         stats["mismatch_rate_clean_mean"] = None
         stats["mismatch_rate_clean_max"] = None
         stats["n_checks_clean"] = 0
+    # Gapped checks get their own max. Reusing mismatch_rate_max for the
+    # after-a-gap column would print a clean check's rate in the gap column
+    # whenever a clean check is the worse of the two -- which is exactly the
+    # case that must not be hidden, because a non-zero CLEAN rate is a
+    # replay bug and a non-zero gapped rate is only a measure of the gap.
+    gapped = [c for c in stats["snapshot_checks"] if c["after_gap"]]
+    if gapped:
+        r = np.array([c["rate"] for c in gapped])
+        stats["mismatch_rate_gap_mean"] = float(r.mean())
+        stats["mismatch_rate_gap_max"] = float(r.max())
+        stats["n_checks_gap"] = int(len(r))
+    else:
+        stats["mismatch_rate_gap_mean"] = None
+        stats["mismatch_rate_gap_max"] = None
+        stats["n_checks_gap"] = 0
     return out, stats
