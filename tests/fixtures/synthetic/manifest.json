@@ -1,0 +1,60 @@
+{
+ "schema": 1,
+ "files": {
+  "data/coinbase/BTC-USD/20010101-00.jsonl.gz": {
+   "sha256": "fded7012d4da17e4e5bc85a630ae3f0c49998a51b95dc4201380df3d0380e140",
+   "bytes": 26478,
+   "source": "synthetic",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2001-01-01",
+   "hour": 0,
+   "lines": 1156
+  },
+  "data/hyperliquid/BTC-trades/20010101-00.jsonl.gz": {
+   "sha256": "3c91de4437e2b3f87b37d0e964aed703286c7440b29e5118e9b6d05127f20044",
+   "bytes": 4861,
+   "source": "synthetic",
+   "exchange": "hyperliquid",
+   "symbol": "BTC-trades",
+   "day": "2001-01-01",
+   "hour": 0,
+   "lines": 239
+  },
+  "data/hyperliquid/BTC-l2Book/20010101-00.jsonl.gz": {
+   "sha256": "020a3e279a8322c32a9a4279ead1de7781be73b031bacc626368ecfb394f2e30",
+   "bytes": 33990,
+   "source": "synthetic",
+   "exchange": "hyperliquid",
+   "symbol": "BTC-l2Book",
+   "day": "2001-01-01",
+   "hour": 0,
+   "lines": 3422
+  }
+ },
+ "days": {
+  "coinbase/BTC-USD/2001-01-01": {
+   "source": "synthetic",
+   "lines": 1156,
+   "files": 1,
+   "generator": "tests/fixtures/make_fixture.py",
+   "seed": 20260911
+  },
+  "hyperliquid/BTC-trades/2001-01-01": {
+   "source": "synthetic",
+   "lines": 239,
+   "files": 1,
+   "generator": "tests/fixtures/make_fixture.py",
+   "seed": 20260911
+  },
+  "hyperliquid/BTC-l2Book/2001-01-01": {
+   "source": "synthetic",
+   "lines": 3422,
+   "files": 1,
+   "generator": "tests/fixtures/make_fixture.py",
+   "seed": 20260911
+  }
+ },
+ "note": "SYNTHETIC self-test fixture written by tests/fixtures/make_fixture.py. Not market data.",
+ "updated_at": "1970-01-01T00:00:00Z"
+}
