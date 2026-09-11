@@ -71,6 +71,12 @@ jobs:
             grep -qF 'NOT A MARKET RESULT' "$OUT" || { echo "FAIL: synthetic banner missing"; exit 1; }
             grep -qE '^\| coinbase/BTC-USD/[0-9-]+ \|' "$OUT" || { echo "FAIL: no day row in the data table"; exit 1; }
             grep -qE '^\| best-level OFI \| 1 s \| -?[0-9]' "$OUT" || { echo "FAIL: no OFI row with a number"; exit 1; }
+            # the fee hurdle must keep declaring what share of the out-of-sample
+            # set it actually traded; on the fixture at least one row sits on a
+            # tied prediction plateau and must say so rather than pass itself
+            # off as a clean decile
+            grep -qF 'share of OOS' "$OUT" || { echo "FAIL: fee hurdle does not declare its traded share"; exit 1; }
+            grep -qF 'tied)' "$OUT" || { echo "FAIL: tied plateau not declared"; exit 1; }
             echo "smoke table OK: $(wc -l < "$OUT") lines"
           } 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
