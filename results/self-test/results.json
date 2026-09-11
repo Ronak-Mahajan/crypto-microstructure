@@ -213,6 +213,7 @@
       "pred_bps": 0.06292019178699652,
       "threshold": 0.03567396619064552,
       "n_at_threshold": 0,
+      "spread_bps": 1.0021540365361727,
       "ci": [
        0.02126890320159722,
        0.062150222865357714
@@ -258,6 +259,7 @@
       "pred_bps": 0.06413444164117627,
       "threshold": 0.03479728540950558,
       "n_at_threshold": 0,
+      "spread_bps": 1.0020777714643556,
       "ci": [
        0.01370939335661924,
        0.0619367629055046
@@ -303,6 +305,7 @@
       "pred_bps": 0.07362340789247017,
       "threshold": 0.05993252012487349,
       "n_at_threshold": 12,
+      "spread_bps": 1.0022148572196077,
       "ci": [
        -0.06606319541255719,
        0.05216556781069772
@@ -348,6 +351,7 @@
       "pred_bps": 0.03973245463313844,
       "threshold": 0.037942341146432995,
       "n_at_threshold": 375,
+      "spread_bps": 1.0023095327704654,
       "ci": [
        -0.009248305047753709,
        0.039360733205542175
@@ -393,6 +397,7 @@
       "pred_bps": 0.20473597334636787,
       "threshold": 0.17803113929571732,
       "n_at_threshold": 295,
+      "spread_bps": 1.0022813143988238,
       "ci": [
        0.031449223220123335,
        0.23520048235882543
@@ -438,6 +443,7 @@
       "pred_bps": 0.20212375841527597,
       "threshold": 0.17926919321312265,
       "n_at_threshold": 283,
+      "spread_bps": 1.0022764410219616,
       "ci": [
        0.02822232265320434,
        0.21963832512013898
@@ -483,6 +489,7 @@
       "pred_bps": 0.4168863454137425,
       "threshold": 0.3348341398549857,
       "n_at_threshold": 4,
+      "spread_bps": 1.0022014527004384,
       "ci": [
        -0.2814656742106519,
        0.33977766924606817
@@ -528,6 +535,7 @@
       "pred_bps": 0.19696108240234297,
       "threshold": 0.18824082628335925,
       "n_at_threshold": 375,
+      "spread_bps": 1.0023003327159823,
       "ci": [
        0.019122579713267963,
        0.22882432344897818
@@ -573,6 +581,7 @@
       "pred_bps": 0.4026827849493365,
       "threshold": 0.3527500647178357,
       "n_at_threshold": 295,
+      "spread_bps": 1.0022875992678557,
       "ci": [
        -0.006317526533266199,
        0.41218879680290177
@@ -618,6 +627,7 @@
       "pred_bps": 0.3975226558111805,
       "threshold": 0.3546040650332407,
       "n_at_threshold": 283,
+      "spread_bps": 1.0022770152594036,
       "ci": [
        0.010191028115296053,
        0.4081198857695957
@@ -663,6 +673,7 @@
       "pred_bps": 0.7240448191074725,
       "threshold": 0.5975504881782104,
       "n_at_threshold": 12,
+      "spread_bps": 1.002208002840878,
       "ci": [
        -0.3236005417677512,
        0.5984694415778494
@@ -708,6 +719,7 @@
       "pred_bps": 0.37675184302525677,
       "threshold": 0.37560550827945577,
       "n_at_threshold": 375,
+      "spread_bps": 1.0023112991310785,
       "ci": [
        -0.007117568962765063,
        0.4534749109943398
@@ -753,6 +765,7 @@
       "pred_bps": 1.1272718897894602,
       "threshold": 0.9920652644672994,
       "n_at_threshold": 295,
+      "spread_bps": 1.0022938907883585,
       "ci": [
        0.00048557124483699293,
        1.0383324605028321
@@ -798,6 +811,7 @@
       "pred_bps": 1.118740406136978,
       "threshold": 0.9946446455584707,
       "n_at_threshold": 283,
+      "spread_bps": 1.0022789527839226,
       "ci": [
        0.05614620826422691,
        1.0653934826519496
@@ -843,6 +857,7 @@
       "pred_bps": 2.3163189825331165,
       "threshold": 1.827141216859305,
       "n_at_threshold": 7,
+      "spread_bps": 1.0021712260812738,
       "ci": [
        -0.8280174408360351,
        1.316738470278626
@@ -888,6 +903,7 @@
       "pred_bps": 1.0848435217477785,
       "threshold": 1.0564012805089091,
       "n_at_threshold": 375,
+      "spread_bps": 1.0023101363097138,
       "ci": [
        0.04568580312481525,
        1.1420983531219064
@@ -933,6 +949,7 @@
       "pred_bps": 2.176574982629745,
       "threshold": 1.9831377397669294,
       "n_at_threshold": 295,
+      "spread_bps": 1.002299229649529,
       "ci": [
        0.23391683294500878,
        2.2077463433267446
@@ -978,6 +995,7 @@
       "pred_bps": 2.1585970717992935,
       "threshold": 1.9844486228680884,
       "n_at_threshold": 283,
+      "spread_bps": 1.0022902027112848,
       "ci": [
        0.21255232828974058,
        2.1790940316410943
@@ -1023,6 +1041,7 @@
       "pred_bps": 3.648460251405028,
       "threshold": 2.9725638446253675,
       "n_at_threshold": 7,
+      "spread_bps": 1.0021596492047908,
       "ci": [
        -0.96244231530586,
        1.9864475807185704
@@ -1068,6 +1087,7 @@
       "pred_bps": 2.1801617961350566,
       "threshold": 2.0928760488136224,
       "n_at_threshold": 375,
+      "spread_bps": 1.0023093391433906,
       "ci": [
        0.20499221240583174,
        2.20955988097133
@@ -1113,6 +1133,7 @@
       "pred_bps": 13.733311463287459,
       "threshold": 13.464467241574555,
       "n_at_threshold": 295,
+      "spread_bps": 1.00231473871339,
       "ci": [
        -2.2217602379332173,
        3.355508365118946
@@ -1158,6 +1179,7 @@
       "pred_bps": 14.766103603398372,
       "threshold": 13.450235525291507,
       "n_at_threshold": 0,
+      "spread_bps": 1.0022770365352571,
       "ci": [
        -2.217270350826858,
        3.0592764240686647
@@ -1203,6 +1225,7 @@
       "pred_bps": 15.045881642566574,
       "threshold": 14.785718268244958,
       "n_at_threshold": 0,
+      "spread_bps": 1.0025740055976358,
       "ci": [
        -1.8694979830903753,
        0.4494897418474408
@@ -1248,6 +1271,7 @@
       "pred_bps": 13.783067567123922,
       "threshold": 13.742861108226982,
       "n_at_threshold": 375,
+      "spread_bps": 1.002310146896719,
       "ci": [
        -2.19907311065337,
        2.1711769135780092
@@ -1364,6 +1388,7 @@
      "pred_bps": 0.06292019178699652,
      "threshold": 0.03567396619064552,
      "n_at_threshold": 0,
+     "spread_bps": 1.0021540365361727,
      "ci": [
       0.02126890320159722,
       0.062150222865357714
@@ -1409,6 +1434,7 @@
      "pred_bps": 0.06413444164117627,
      "threshold": 0.03479728540950558,
      "n_at_threshold": 0,
+     "spread_bps": 1.0020777714643556,
      "ci": [
       0.01370939335661924,
       0.0619367629055046
@@ -1454,6 +1480,7 @@
      "pred_bps": 0.07362340789247017,
      "threshold": 0.05993252012487349,
      "n_at_threshold": 12,
+     "spread_bps": 1.0022148572196077,
      "ci": [
       -0.06606319541255719,
       0.05216556781069772
@@ -1499,6 +1526,7 @@
      "pred_bps": 0.03973245463313844,
      "threshold": 0.037942341146432995,
      "n_at_threshold": 375,
+     "spread_bps": 1.0023095327704654,
      "ci": [
       -0.009248305047753709,
       0.039360733205542175
@@ -1544,6 +1572,7 @@
      "pred_bps": 0.20473597334636787,
      "threshold": 0.17803113929571732,
      "n_at_threshold": 295,
+     "spread_bps": 1.0022813143988238,
      "ci": [
       0.031449223220123335,
       0.23520048235882543
@@ -1589,6 +1618,7 @@
      "pred_bps": 0.20212375841527597,
      "threshold": 0.17926919321312265,
      "n_at_threshold": 283,
+     "spread_bps": 1.0022764410219616,
      "ci": [
       0.02822232265320434,
       0.21963832512013898
@@ -1634,6 +1664,7 @@
      "pred_bps": 0.4168863454137425,
      "threshold": 0.3348341398549857,
      "n_at_threshold": 4,
+     "spread_bps": 1.0022014527004384,
      "ci": [
       -0.2814656742106519,
       0.33977766924606817
@@ -1679,6 +1710,7 @@
      "pred_bps": 0.19696108240234297,
      "threshold": 0.18824082628335925,
      "n_at_threshold": 375,
+     "spread_bps": 1.0023003327159823,
      "ci": [
       0.019122579713267963,
       0.22882432344897818
@@ -1724,6 +1756,7 @@
      "pred_bps": 0.4026827849493365,
      "threshold": 0.3527500647178357,
      "n_at_threshold": 295,
+     "spread_bps": 1.0022875992678557,
      "ci": [
       -0.006317526533266199,
       0.41218879680290177
@@ -1769,6 +1802,7 @@
      "pred_bps": 0.3975226558111805,
      "threshold": 0.3546040650332407,
      "n_at_threshold": 283,
+     "spread_bps": 1.0022770152594036,
      "ci": [
       0.010191028115296053,
       0.4081198857695957
@@ -1814,6 +1848,7 @@
      "pred_bps": 0.7240448191074725,
      "threshold": 0.5975504881782104,
      "n_at_threshold": 12,
+     "spread_bps": 1.002208002840878,
      "ci": [
       -0.3236005417677512,
       0.5984694415778494
@@ -1859,6 +1894,7 @@
      "pred_bps": 0.37675184302525677,
      "threshold": 0.37560550827945577,
      "n_at_threshold": 375,
+     "spread_bps": 1.0023112991310785,
      "ci": [
       -0.007117568962765063,
       0.4534749109943398
@@ -1904,6 +1940,7 @@
      "pred_bps": 1.1272718897894602,
      "threshold": 0.9920652644672994,
      "n_at_threshold": 295,
+     "spread_bps": 1.0022938907883585,
      "ci": [
       0.00048557124483699293,
       1.0383324605028321
@@ -1949,6 +1986,7 @@
      "pred_bps": 1.118740406136978,
      "threshold": 0.9946446455584707,
      "n_at_threshold": 283,
+     "spread_bps": 1.0022789527839226,
      "ci": [
       0.05614620826422691,
       1.0653934826519496
@@ -1994,6 +2032,7 @@
      "pred_bps": 2.3163189825331165,
      "threshold": 1.827141216859305,
      "n_at_threshold": 7,
+     "spread_bps": 1.0021712260812738,
      "ci": [
       -0.8280174408360351,
       1.316738470278626
@@ -2039,6 +2078,7 @@
      "pred_bps": 1.0848435217477785,
      "threshold": 1.0564012805089091,
      "n_at_threshold": 375,
+     "spread_bps": 1.0023101363097138,
      "ci": [
       0.04568580312481525,
       1.1420983531219064
@@ -2084,6 +2124,7 @@
      "pred_bps": 2.176574982629745,
      "threshold": 1.9831377397669294,
      "n_at_threshold": 295,
+     "spread_bps": 1.002299229649529,
      "ci": [
       0.23391683294500878,
       2.2077463433267446
@@ -2129,6 +2170,7 @@
      "pred_bps": 2.1585970717992935,
      "threshold": 1.9844486228680884,
      "n_at_threshold": 283,
+     "spread_bps": 1.0022902027112848,
      "ci": [
       0.21255232828974058,
       2.1790940316410943
@@ -2174,6 +2216,7 @@
      "pred_bps": 3.648460251405028,
      "threshold": 2.9725638446253675,
      "n_at_threshold": 7,
+     "spread_bps": 1.0021596492047908,
      "ci": [
       -0.96244231530586,
       1.9864475807185704
@@ -2219,6 +2262,7 @@
      "pred_bps": 2.1801617961350566,
      "threshold": 2.0928760488136224,
      "n_at_threshold": 375,
+     "spread_bps": 1.0023093391433906,
      "ci": [
       0.20499221240583174,
       2.20955988097133
@@ -2264,6 +2308,7 @@
      "pred_bps": 13.733311463287459,
      "threshold": 13.464467241574555,
      "n_at_threshold": 295,
+     "spread_bps": 1.00231473871339,
      "ci": [
       -2.2217602379332173,
       3.355508365118946
@@ -2309,6 +2354,7 @@
      "pred_bps": 14.766103603398372,
      "threshold": 13.450235525291507,
      "n_at_threshold": 0,
+     "spread_bps": 1.0022770365352571,
      "ci": [
       -2.217270350826858,
       3.0592764240686647
@@ -2354,6 +2400,7 @@
      "pred_bps": 15.045881642566574,
      "threshold": 14.785718268244958,
      "n_at_threshold": 0,
+     "spread_bps": 1.0025740055976358,
      "ci": [
       -1.8694979830903753,
       0.4494897418474408
@@ -2399,6 +2446,7 @@
      "pred_bps": 13.783067567123922,
      "threshold": 13.742861108226982,
      "n_at_threshold": 375,
+     "spread_bps": 1.002310146896719,
      "ci": [
       -2.19907311065337,
       2.1711769135780092
@@ -2418,37 +2466,38 @@
     "n_pool": 1282,
     "frac": 0.10062402496099844,
     "n_at_threshold": 0,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0021540365361727,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.96308175301897
+      "cost_bps": 121.00215403653617,
+      "net_bps": -120.96331511056245
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.963081753018963
+      "cost_bps": 11.002154036536172,
+      "net_bps": -10.963315110562448
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.963081753018963
+      "cost_bps": 10.002154036536172,
+      "net_bps": -9.963315110562448
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.9630817530189635
+      "cost_bps": 8.002154036536172,
+      "net_bps": -7.963315110562448
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.95924039503359
+      "cost_bps": 78.99784596346383,
+      "net_bps": -78.95900703749011
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.040759604966413
+      "cost_bps": -1.0021540365361727,
+      "net_bps": 1.0409929625098975
      }
     ]
    },
@@ -2463,37 +2512,38 @@
     "n_pool": 1282,
     "frac": 0.10062402496099844,
     "n_at_threshold": 0,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0020777714643556,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.96308175301897
+      "cost_bps": 121.00207777146436,
+      "net_bps": -120.96323884549064
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.963081753018963
+      "cost_bps": 11.002077771464355,
+      "net_bps": -10.96323884549063
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.963081753018963
+      "cost_bps": 10.002077771464355,
+      "net_bps": -9.96323884549063
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.9630817530189635
+      "cost_bps": 8.002077771464355,
+      "net_bps": -7.963238845490631
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.95924039503359
+      "cost_bps": 78.99792222853564,
+      "net_bps": -78.95908330256192
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.040759604966413
+      "cost_bps": -1.0020777714643556,
+      "net_bps": 1.0409166974380804
      }
     ]
    },
@@ -2508,37 +2558,38 @@
     "n_pool": 1282,
     "frac": 0.10686427457098284,
     "n_at_threshold": 12,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022148572196077,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -121.00193680754526
+      "cost_bps": 121.00221485721961,
+      "net_bps": -121.00223098577219
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -11.001936807545269
+      "cost_bps": 11.002214857219608,
+      "net_bps": -11.002230985772188
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -10.001936807545269
+      "cost_bps": 10.002214857219608,
+      "net_bps": -10.002230985772188
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -8.001936807545269
+      "cost_bps": 8.002214857219608,
+      "net_bps": -8.002230985772188
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.99809544955988
+      "cost_bps": 78.99778514278039,
+      "net_bps": -78.99780127133296
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.001904550440108
+      "cost_bps": -1.0022148572196077,
+      "net_bps": 1.0021987286670275
      }
     ]
    },
@@ -2553,37 +2604,38 @@
     "n_pool": 1282,
     "frac": 0.31435257410296413,
     "n_at_threshold": 375,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0023095327704654,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.9845119057986
+      "cost_bps": 121.00230953277047,
+      "net_bps": -120.98490075957638
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.984511905798595
+      "cost_bps": 11.002309532770465,
+      "net_bps": -10.984900759576371
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.984511905798595
+      "cost_bps": 10.002309532770465,
+      "net_bps": -9.984900759576371
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.984511905798595
+      "cost_bps": 8.002309532770465,
+      "net_bps": -7.984900759576371
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.98067054781322
+      "cost_bps": 78.99769046722953,
+      "net_bps": -78.98028169403544
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.019329452186782
+      "cost_bps": -1.0023095327704654,
+      "net_bps": 1.0197183059645591
      }
     ]
    },
@@ -2598,37 +2650,38 @@
     "n_pool": 1274,
     "frac": 0.31711145996860285,
     "n_at_threshold": 295,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022813143988238,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.86796334123945
+      "cost_bps": 121.00228131439883,
+      "net_bps": -120.86832397664558
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.86796334123944
+      "cost_bps": 11.002281314398823,
+      "net_bps": -10.868323976645575
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.86796334123944
+      "cost_bps": 10.002281314398823,
+      "net_bps": -9.868323976645575
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.867963341239441
+      "cost_bps": 8.002281314398823,
+      "net_bps": -7.868323976645576
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.86412198325407
+      "cost_bps": 78.99771868560117,
+      "net_bps": -78.86376134784793
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.1358780167459357
+      "cost_bps": -1.0022813143988238,
+      "net_bps": 1.136238652152071
      }
     ]
    },
@@ -2643,37 +2696,38 @@
     "n_pool": 1274,
     "frac": 0.304552590266876,
     "n_at_threshold": 283,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022764410219616,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.87277444076408
+      "cost_bps": 121.00227644102196,
+      "net_bps": -120.87313020279335
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.872774440764076
+      "cost_bps": 11.002276441021962,
+      "net_bps": -10.87313020279335
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.872774440764076
+      "cost_bps": 10.002276441021962,
+      "net_bps": -9.87313020279335
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.872774440764076
+      "cost_bps": 8.002276441021962,
+      "net_bps": -7.87313020279335
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.8689330827787
+      "cost_bps": 78.99772355897804,
+      "net_bps": -78.86857732074942
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.1310669172213004
+      "cost_bps": -1.0022764410219616,
+      "net_bps": 1.1314226792505737
      }
     ]
    },
@@ -2688,37 +2742,38 @@
     "n_pool": 1274,
     "frac": 0.10125588697017268,
     "n_at_threshold": 4,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022014527004384,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.94762620336068
+      "cost_bps": 121.00220145270043,
+      "net_bps": -120.94790697706843
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.94762620336069
+      "cost_bps": 11.002201452700438,
+      "net_bps": -10.94790697706844
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.94762620336069
+      "cost_bps": 10.002201452700438,
+      "net_bps": -9.94790697706844
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.94762620336069
+      "cost_bps": 8.002201452700438,
+      "net_bps": -7.94790697706844
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.9437848453753
+      "cost_bps": 78.99779854729957,
+      "net_bps": -78.94350407166756
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.0562151546246867
+      "cost_bps": -1.0022014527004384,
+      "net_bps": 1.0564959283324369
      }
     ]
    },
@@ -2733,37 +2788,38 @@
     "n_pool": 1274,
     "frac": 0.34065934065934067,
     "n_at_threshold": 375,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0023003327159823,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.86569196225756
+      "cost_bps": 121.00230033271598,
+      "net_bps": -120.86607161598084
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.865691962257557
+      "cost_bps": 11.002300332715983,
+      "net_bps": -10.866071615980852
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.865691962257557
+      "cost_bps": 10.002300332715983,
+      "net_bps": -9.866071615980852
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.865691962257557
+      "cost_bps": 8.002300332715983,
+      "net_bps": -7.866071615980852
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.86185060427218
+      "cost_bps": 78.99769966728402,
+      "net_bps": -78.86147095054889
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.138149395727819
+      "cost_bps": -1.0023003327159823,
+      "net_bps": 1.138529049451113
      }
     ]
    },
@@ -2778,37 +2834,38 @@
     "n_pool": 1264,
     "frac": 0.31645569620253167,
     "n_at_threshold": 295,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022875992678557,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.77392483588575
+      "cost_bps": 121.00228759926786,
+      "net_bps": -120.77429175616092
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.773924835885751
+      "cost_bps": 11.002287599267856,
+      "net_bps": -10.774291756160919
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.773924835885751
+      "cost_bps": 10.002287599267856,
+      "net_bps": -9.774291756160919
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.773924835885751
+      "cost_bps": 8.002287599267856,
+      "net_bps": -7.774291756160919
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.77008347790037
+      "cost_bps": 78.99771240073214,
+      "net_bps": -78.7697165576252
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.2299165220996255
+      "cost_bps": -1.0022875992678557,
+      "net_bps": 1.2302834423747933
      }
     ]
    },
@@ -2823,37 +2880,38 @@
     "n_pool": 1264,
     "frac": 0.3061708860759494,
     "n_at_threshold": 283,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022770152594036,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.76886429727631
+      "cost_bps": 121.00227701525941,
+      "net_bps": -120.76922063354303
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.768864297276307
+      "cost_bps": 11.002277015259404,
+      "net_bps": -10.769220633543023
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.768864297276307
+      "cost_bps": 10.002277015259404,
+      "net_bps": -9.769220633543023
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.7688642972763065
+      "cost_bps": 8.002277015259404,
+      "net_bps": -7.769220633543022
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.76502293929093
+      "cost_bps": 78.99772298474059,
+      "net_bps": -78.76466660302421
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.2349770607090695
+      "cost_bps": -1.0022770152594036,
+      "net_bps": 1.235333396975785
      }
     ]
    },
@@ -2868,37 +2926,38 @@
     "n_pool": 1264,
     "frac": 0.10443037974683544,
     "n_at_threshold": 12,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.002208002840878,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.85022282722987
+      "cost_bps": 121.00220800284087,
+      "net_bps": -120.85051015107805
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.850222827229869
+      "cost_bps": 11.002208002840877,
+      "net_bps": -10.850510151078058
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.850222827229869
+      "cost_bps": 10.002208002840877,
+      "net_bps": -9.850510151078058
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.85022282722987
+      "cost_bps": 8.002208002840877,
+      "net_bps": -7.850510151078059
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.84638146924449
+      "cost_bps": 78.99779199715913,
+      "net_bps": -78.84609414539631
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.1536185307555065
+      "cost_bps": -1.002208002840878,
+      "net_bps": 1.1539058546036962
      }
     ]
    },
@@ -2913,37 +2972,38 @@
     "n_pool": 1264,
     "frac": 0.32436708860759494,
     "n_at_threshold": 375,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0023112991310785,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.74527950311175
+      "cost_bps": 121.00231129913108,
+      "net_bps": -120.74567012325014
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.745279503111744
+      "cost_bps": 11.002311299131078,
+      "net_bps": -10.745670123250134
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.745279503111744
+      "cost_bps": 10.002311299131078,
+      "net_bps": -9.745670123250134
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.745279503111745
+      "cost_bps": 8.002311299131078,
+      "net_bps": -7.745670123250135
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.74143814512637
+      "cost_bps": 78.99768870086892,
+      "net_bps": -78.74104752498798
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.258561854873631
+      "cost_bps": -1.0023112991310785,
+      "net_bps": 1.2589524750120213
      }
     ]
    },
@@ -2958,37 +3018,38 @@
     "n_pool": 1224,
     "frac": 0.33088235294117646,
     "n_at_threshold": 295,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022938907883585,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.40802865839792
+      "cost_bps": 121.00229389078837,
+      "net_bps": -120.4084018701936
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.408028658397928
+      "cost_bps": 11.002293890788359,
+      "net_bps": -10.408401870193599
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.408028658397928
+      "cost_bps": 10.002293890788359,
+      "net_bps": -9.408401870193599
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.408028658397928
+      "cost_bps": 8.002293890788359,
+      "net_bps": -7.4084018701935985
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.40418730041254
+      "cost_bps": 78.99770610921163,
+      "net_bps": -78.40381408861687
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.5958126995874484
+      "cost_bps": -1.0022938907883585,
+      "net_bps": 1.5961859113831187
      }
     ]
    },
@@ -3003,37 +3064,38 @@
     "n_pool": 1224,
     "frac": 0.3145424836601307,
     "n_at_threshold": 283,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022789527839226,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.36417660454205
+      "cost_bps": 121.00227895278393,
+      "net_bps": -120.36453487833329
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.364176604542047
+      "cost_bps": 11.002278952783923,
+      "net_bps": -10.364534878333282
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.364176604542047
+      "cost_bps": 10.002278952783923,
+      "net_bps": -9.364534878333282
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.364176604542047
+      "cost_bps": 8.002278952783923,
+      "net_bps": -7.3645348783332825
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.36033524655667
+      "cost_bps": 78.99772104721607,
+      "net_bps": -78.35997697276544
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.6396647534433293
+      "cost_bps": -1.0022789527839226,
+      "net_bps": 1.6400230272345637
      }
     ]
    },
@@ -3048,37 +3110,38 @@
     "n_pool": 1224,
     "frac": 0.10457516339869281,
     "n_at_threshold": 7,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0021712260812738,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.37568147223892
+      "cost_bps": 121.00217122608127,
+      "net_bps": -120.37593201932751
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.375681472238922
+      "cost_bps": 11.002171226081273,
+      "net_bps": -10.375932019327507
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.375681472238922
+      "cost_bps": 10.002171226081273,
+      "net_bps": -9.375932019327507
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.375681472238922
+      "cost_bps": 8.002171226081273,
+      "net_bps": -7.375932019327507
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.37184011425354
+      "cost_bps": 78.99782877391873,
+      "net_bps": -78.37158956716496
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.6281598857464545
+      "cost_bps": -1.0021712260812738,
+      "net_bps": 1.62841043283504
      }
     ]
    },
@@ -3093,37 +3156,38 @@
     "n_pool": 1224,
     "frac": 0.3480392156862745,
     "n_at_threshold": 375,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0023101363097138,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.33617059742006
+      "cost_bps": 121.00231013630972,
+      "net_bps": -120.33656005473709
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.336170597420068
+      "cost_bps": 11.002310136309713,
+      "net_bps": -10.336560054737093
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.336170597420068
+      "cost_bps": 10.002310136309713,
+      "net_bps": -9.336560054737093
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.336170597420068
+      "cost_bps": 8.002310136309713,
+      "net_bps": -7.3365600547370935
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.33232923943469
+      "cost_bps": 78.99768986369028,
+      "net_bps": -78.33193978211766
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.6676707605653076
+      "cost_bps": -1.0023101363097138,
+      "net_bps": 1.6680602178823332
      }
     ]
    },
@@ -3138,37 +3202,38 @@
     "n_pool": 1164,
     "frac": 0.327319587628866,
     "n_at_threshold": 295,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.002299229649529,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -119.73666218162107
+      "cost_bps": 121.00229922964952,
+      "net_bps": -119.7370407322779
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -9.736662181621073
+      "cost_bps": 11.002299229649529,
+      "net_bps": -9.737040732277913
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -8.736662181621073
+      "cost_bps": 10.002299229649529,
+      "net_bps": -8.737040732277913
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -6.736662181621073
+      "cost_bps": 8.002299229649529,
+      "net_bps": -6.737040732277913
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -77.73282082363569
+      "cost_bps": 78.99770077035048,
+      "net_bps": -77.73244227297886
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 2.2671791763643037
+      "cost_bps": -1.002299229649529,
+      "net_bps": 2.2675577270211447
      }
     ]
    },
@@ -3183,37 +3248,38 @@
     "n_pool": 1164,
     "frac": 0.3230240549828179,
     "n_at_threshold": 283,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022902027112848,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -119.7411743307566
+      "cost_bps": 121.00229020271128,
+      "net_bps": -119.7415438544752
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -9.741174330756607
+      "cost_bps": 11.002290202711285,
+      "net_bps": -9.741543854475204
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -8.741174330756607
+      "cost_bps": 10.002290202711285,
+      "net_bps": -8.741543854475204
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -6.741174330756607
+      "cost_bps": 8.002290202711285,
+      "net_bps": -6.7415438544752035
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -77.73733297277123
+      "cost_bps": 78.99770979728872,
+      "net_bps": -77.73696344905264
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 2.262667027228769
+      "cost_bps": -1.0022902027112848,
+      "net_bps": 2.2630365509473656
      }
     ]
    },
@@ -3228,37 +3294,38 @@
     "n_pool": 1164,
     "frac": 0.1056701030927835,
     "n_at_threshold": 7,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0021596492047908,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -120.07331478038442
+      "cost_bps": 121.00215964920478,
+      "net_bps": -120.07355375059652
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -10.073314780384418
+      "cost_bps": 11.00215964920479,
+      "net_bps": -10.07355375059652
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -9.073314780384418
+      "cost_bps": 10.00215964920479,
+      "net_bps": -9.07355375059652
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -7.073314780384417
+      "cost_bps": 8.00215964920479,
+      "net_bps": -7.07355375059652
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -78.06947342239904
+      "cost_bps": 78.99784035079522,
+      "net_bps": -78.06923445218695
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 1.9305265776009586
+      "cost_bps": -1.0021596492047908,
+      "net_bps": 1.9307655478130612
      }
     ]
    },
@@ -3273,37 +3340,38 @@
     "n_pool": 1164,
     "frac": 0.3634020618556701,
     "n_at_threshold": 375,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0023093391433906,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -119.74145295847104
+      "cost_bps": 121.0023093391434,
+      "net_bps": -119.74184161862175
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -9.74145295847104
+      "cost_bps": 11.002309339143391,
+      "net_bps": -9.741841618621743
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -8.74145295847104
+      "cost_bps": 10.002309339143391,
+      "net_bps": -8.741841618621743
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -6.741452958471041
+      "cost_bps": 8.002309339143391,
+      "net_bps": -6.741841618621744
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -77.73761160048566
+      "cost_bps": 78.9976906608566,
+      "net_bps": -77.73722294033496
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 2.2623883995143355
+      "cost_bps": -1.0023093391433906,
+      "net_bps": 2.262777059665038
      }
     ]
    },
@@ -3318,37 +3386,38 @@
     "n_pool": 684,
     "frac": 0.5277777777777778,
     "n_at_threshold": 295,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.00231473871339,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -119.2308110802591
+      "cost_bps": 121.0023147387134,
+      "net_bps": -119.2312051399798
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -9.230811080259096
+      "cost_bps": 11.00231473871339,
+      "net_bps": -9.231205139979798
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -8.230811080259096
+      "cost_bps": 10.00231473871339,
+      "net_bps": -8.231205139979798
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -6.230811080259096
+      "cost_bps": 8.00231473871339,
+      "net_bps": -6.231205139979798
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -77.22696972227372
+      "cost_bps": 78.9976852612866,
+      "net_bps": -77.22657566255302
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 2.7730302777262805
+      "cost_bps": -1.00231473871339,
+      "net_bps": 2.773424337446982
      }
     ]
    },
@@ -3363,37 +3432,38 @@
     "n_pool": 684,
     "frac": 0.10087719298245613,
     "n_at_threshold": 0,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0022770365352571,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -118.72163021180403
+      "cost_bps": 121.00227703653526,
+      "net_bps": -118.7219865693466
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -8.72163021180402
+      "cost_bps": 11.002277036535258,
+      "net_bps": -8.72198656934659
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -7.721630211804021
+      "cost_bps": 10.002277036535258,
+      "net_bps": -7.721986569346591
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -5.721630211804021
+      "cost_bps": 8.002277036535258,
+      "net_bps": -5.721986569346591
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -76.71778885381865
+      "cost_bps": 78.99772296346474,
+      "net_bps": -76.71743249627607
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 3.282211146181356
+      "cost_bps": -1.0022770365352571,
+      "net_bps": 3.282567503723925
      }
     ]
    },
@@ -3408,37 +3478,38 @@
     "n_pool": 684,
     "frac": 0.10087719298245613,
     "n_at_threshold": 0,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.0025740055976358,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -122.62909567303952
+      "cost_bps": 121.00257400559764,
+      "net_bps": -122.62974899964446
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -12.629095673039512
+      "cost_bps": 11.002574005597635,
+      "net_bps": -12.629748999644459
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -11.629095673039512
+      "cost_bps": 10.002574005597635,
+      "net_bps": -11.629748999644459
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -9.629095673039512
+      "cost_bps": 8.002574005597635,
+      "net_bps": -9.629748999644459
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -80.62525431505414
+      "cost_bps": 78.99742599440236,
+      "net_bps": -80.62460098844919
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": -0.6252543150541354
+      "cost_bps": -1.0025740055976358,
+      "net_bps": -0.6246009884491879
      }
     ]
    },
@@ -3453,37 +3524,38 @@
     "n_pool": 684,
     "frac": 0.5745614035087719,
     "n_at_threshold": 375,
-    "spread_bps": 1.0019206789926882,
+    "spread_bps": 1.002310146896719,
+    "spread_pooled_bps": 1.0019206789926882,
     "rows": [
      {
       "scenario": "take, Coinbase entry tier (60 bps)",
-      "cost_bps": 121.00192067899269,
-      "net_bps": -119.145514314864
+      "cost_bps": 121.00231014689672,
+      "net_bps": -119.14590378276803
      },
      {
       "scenario": "take, Coinbase top tier (5 bps)",
-      "cost_bps": 11.001920678992688,
-      "net_bps": -9.145514314863995
+      "cost_bps": 11.002310146896718,
+      "net_bps": -9.145903782768025
      },
      {
       "scenario": "take, Hyperliquid tier 0 (4.5 bps)",
-      "cost_bps": 10.001920678992688,
-      "net_bps": -8.145514314863995
+      "cost_bps": 10.002310146896718,
+      "net_bps": -8.145903782768025
      },
      {
       "scenario": "take, Hyperliquid legacy (3.5 bps)",
-      "cost_bps": 8.001920678992688,
-      "net_bps": -6.145514314863995
+      "cost_bps": 8.002310146896718,
+      "net_bps": -6.145903782768025
      },
      {
       "scenario": "passive, Coinbase entry maker (40 bps), optimistic",
-      "cost_bps": 78.99807932100731,
-      "net_bps": -77.14167295687862
+      "cost_bps": 78.99768985310328,
+      "net_bps": -77.1412834889746
      },
      {
       "scenario": "passive, Coinbase top maker (0 bps), optimistic",
-      "cost_bps": -1.0019206789926882,
-      "net_bps": 2.858327043121381
+      "cost_bps": -1.002310146896719,
+      "net_bps": 2.8587165110254125
      }
     ]
    }

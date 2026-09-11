@@ -300,7 +300,8 @@ def contemporaneous_r2(mid: np.ndarray, ofi: np.ndarray, seg: np.ndarray,
 # decile edge (for the fee hurdle)
 # ---------------------------------------------------------------------------
 
-def decile_edge(y: np.ndarray, yhat: np.ndarray, q: float = 0.1) -> dict:
+def decile_edge(y: np.ndarray, yhat: np.ndarray, q: float = 0.1,
+                spread: np.ndarray | None = None) -> dict:
     """Realised signed move (bps) where |prediction| clears its 1-q quantile.
 
     Positions are taken in the direction of the prediction; edge is the mean
@@ -317,6 +318,12 @@ def decile_edge(y: np.ndarray, yhat: np.ndarray, q: float = 0.1) -> dict:
     realised share is reported instead: `frac` is what was actually traded,
     and `n_at_threshold` says how much of it sits on the plateau. A `frac`
     far above q is itself the finding -- the signal has no top decile there.
+
+    `spread` (bps, row-aligned with y) is optional; when given, the mean
+    quoted spread over the SELECTED rows is returned as `spread_bps`. The
+    fee hurdle charges that rather than the day's average, because a signal
+    that fires when the book is wide pays the wide spread, and averaging
+    over every bar would quietly subsidise it.
     """
     ok = np.isfinite(y) & np.isfinite(yhat)
     if ok.sum() < 10:
@@ -331,11 +338,16 @@ def decile_edge(y: np.ndarray, yhat: np.ndarray, q: float = 0.1) -> dict:
         return {"n": 0, "n_pool": n_pool, "frac": 0.0,
                 "edge_bps": np.nan, "pred_bps": np.nan}
     s = np.sign(pp[sel])
-    return {"n": int(sel.sum()), "n_pool": n_pool,
-            "frac": float(sel.sum() / n_pool),
-            "edge_bps": float((s * yy[sel]).mean()),
-            "pred_bps": float(a[sel].mean()), "threshold": float(thr),
-            "n_at_threshold": int((a == thr).sum())}
+    out = {"n": int(sel.sum()), "n_pool": n_pool,
+           "frac": float(sel.sum() / n_pool),
+           "edge_bps": float((s * yy[sel]).mean()),
+           "pred_bps": float(a[sel].mean()), "threshold": float(thr),
+           "n_at_threshold": int((a == thr).sum())}
+    if spread is not None:
+        sp = np.asarray(spread, dtype=float)[ok][sel]
+        sp = sp[np.isfinite(sp)]
+        out["spread_bps"] = float(sp.mean()) if len(sp) else np.nan
+    return out
 
 
 def decile_edge_stat(y: np.ndarray, yhat: np.ndarray, q: float = 0.1) -> float:

@@ -381,6 +381,29 @@ def test_a_tied_prediction_plateau_is_kept_whole_and_declared():
     assert e["frac"] > 0.1
 
 
+def test_decile_edge_charges_the_spread_of_the_bars_it_selected():
+    """A signal that only fires in wide markets must be costed at wide.
+
+    The 20 rows with the largest |prediction| all sit in a 9 bps book; the
+    other 180 sit in a 1 bps book. The pooled mean spread is 1.8 bps, which
+    is the number the fee hurdle used to charge. The right number is 9.
+    """
+    signs = np.where(np.arange(200) % 2 == 0, 1.0, -1.0)
+    pp = np.linspace(0.01, 1.0, 200) * signs
+    y = np.sign(pp)
+    spread = np.where(np.abs(pp) >= np.quantile(np.abs(pp), 0.9), 9.0, 1.0)
+    e = inf.decile_edge(y, pp, q=0.1, spread=spread)
+    assert e["n"] == 20
+    assert e["spread_bps"] == pytest.approx(9.0)
+    assert np.mean(spread) == pytest.approx(1.8)      # what it used to charge
+
+
+def test_decile_edge_without_a_spread_reports_none():
+    signs = np.where(np.arange(200) % 2 == 0, 1.0, -1.0)
+    pp = np.linspace(0.01, 1.0, 200) * signs
+    assert "spread_bps" not in inf.decile_edge(np.sign(pp), pp, q=0.1)
+
+
 def test_no_tie_means_the_decile_is_a_decile():
     """With all |predictions| distinct the cut returns exactly a decile."""
     signs = np.where(np.arange(200) % 2 == 0, 1.0, -1.0)

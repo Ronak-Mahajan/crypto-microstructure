@@ -123,7 +123,8 @@ def forward_block(bars: dict, params: dict, with_ci: bool = True) -> dict:
                 rec["ci"] = inference.bootstrap_ci(
                     inference.oos_r2, [y, wf["yhat"], wf["ybar_tr"]],
                     block, params["n_boot"], params["seed"])
-                edge = inference.decile_edge(y, wf["yhat"], params["decile"])
+                edge = inference.decile_edge(y, wf["yhat"], params["decile"],
+                                             spread=bars["spread"])
                 if np.isfinite(edge["edge_bps"]):
                     edge["ci"] = inference.bootstrap_ci(
                         lambda yy, pp: inference.decile_edge_stat(
@@ -283,17 +284,26 @@ def run_results(manifest_path: Path, data_root: Path | None, params: dict,
 
 
 def hurdle_block(fwd: dict, spread_bps: float) -> dict:
+    """Edge minus cost per feature x horizon.
+
+    `spread_bps` is the pooled mean spread and is only the fallback: each
+    row is charged the mean spread over the bars that row actually selected
+    (inference.decile_edge(spread=...)), so a signal that fires when the
+    book is wide is not costed at the day's average width.
+    """
     out = {}
     for key, rec in fwd.items():
         edge = rec.get("edge")
         if not edge or not np.isfinite(edge.get("edge_bps", np.nan)):
             continue
+        sp = edge.get("spread_bps")
+        sp = float(sp) if sp is not None and np.isfinite(sp) else spread_bps
         out[key] = {"edge_bps": edge["edge_bps"], "ci": edge["ci"],
                     "pred_bps": edge["pred_bps"], "n": edge["n"],
                     "n_pool": edge.get("n_pool"), "frac": edge.get("frac"),
                     "n_at_threshold": edge.get("n_at_threshold"),
-                    "spread_bps": spread_bps,
-                    "rows": fees.hurdle_rows(edge["edge_bps"], spread_bps)}
+                    "spread_bps": sp, "spread_pooled_bps": spread_bps,
+                    "rows": fees.hurdle_rows(edge["edge_bps"], sp)}
     return out
 
 

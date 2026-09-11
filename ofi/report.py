@@ -222,11 +222,15 @@ def build_markdown(results: dict) -> str:
     L.append("")
     if pooled and pooled["hurdle"]:
         spread = pooled["mean_spread_bps"]
-        L.append(f"Mean quoted spread over the pooled bars: {f(spread, 2)} bps.")
+        L.append(f"Mean quoted spread over all pooled bars: {f(spread, 2)} bps. "
+                 "Each row is charged the mean spread over the bars IT selected "
+                 "(the `spread charged` column), not that average, because a "
+                 "signal that fires when the book is wide pays the wide spread.")
         L.append("")
-        L.append("| feature | horizon | n | share of OOS | edge (bps) | 95% CI | mean |pred| (bps) |"
+        L.append("| feature | horizon | n | share of OOS | edge (bps) | 95% CI | "
+                 "mean |pred| (bps) | spread charged (bps) |"
                  + "".join(f" {r['scenario']} |" for r in fees.hurdle_rows(0.0, 0.0)))
-        L.append("|---|---|---|---|---|---|---|" + "---|" * len(fees.hurdle_rows(0.0, 0.0)))
+        L.append("|---|---|---|---|---|---|---|---|" + "---|" * len(fees.hurdle_rows(0.0, 0.0)))
         for name in FEATURES:
             for h_s in p["horizons_s"]:
                 rec = pooled["hurdle"].get((name, h_s)) or pooled["hurdle"].get(f"{name}|{h_s}")
@@ -236,7 +240,8 @@ def build_markdown(results: dict) -> str:
                 if rec.get("n_at_threshold", 0) > 1:
                     share += f" ({rec['n_at_threshold']:,} tied)"
                 row = (f"| {FEATURE_LABEL[name]} | {h_s} s | {rec['n']:,} | {share} | "
-                       f"{f(rec['edge_bps'], 2)} | {ci(rec['ci'], 2)} | {f(rec['pred_bps'], 2)} |")
+                       f"{f(rec['edge_bps'], 2)} | {ci(rec['ci'], 2)} | "
+                       f"{f(rec['pred_bps'], 2)} | {f(rec.get('spread_bps'), 2)} |")
                 for r in rec["rows"]:
                     row += f" {f(r['net_bps'], 2)} |"
                 L.append(row)
