@@ -1,188 +1,148 @@
-"""Phase 1 harness: does order-flow imbalance predict short-horizon returns?
+"""Phase 1: does order-flow imbalance predict short-horizon returns, net of fees?
 
-Rebuilds the Coinbase book from recorded snapshots and l2update diffs,
-computes best-level order-flow imbalance (Cont, Kukanov and Stoikov 2014)
-on one-second bars, and regresses forward mid returns on it with
-time-ordered walk-forward splits. Every number this prints is out of
-sample; in-sample fits are never reported.
+Command-line front end for the `ofi` package. Every table it writes is
+regenerated from the data files listed in the manifest; nothing is typed in.
 
-This file is the HARNESS, shipped before the data: it runs end to end on
-whatever the recorder has captured so far, prints fold-by-fold results with
-sample sizes, and refuses to editorialize. Conclusions belong to the weeks
-of data the recorder accumulates, not to the first night. A result on hours
-of data is a smoke test of the pipeline, and the output says so.
+    python analyze.py results                       # every day in manifest.json
+    python analyze.py results --manifest tests/fixtures/synthetic/manifest.json \
+                              --out results-smoke --folds 3
+    python analyze.py day --symbol BTC-USD --day 2025-08-01   # one day, no files written
 
-    python analyze.py                       # all recorded BTC-USD
-    python analyze.py --product ETH-USD --bar 1.0 --horizons 1,5,30
+Pipeline (see ofi/*.py):
+  book       sorted price levels, Coinbase absolute-size l2update semantics,
+             rebuilt book compared with every resent snapshot
+  features   CKS best-level OFI per change (eq. 10), k-level OFI, micro-price,
+             signed trade flow
+  bars       1 s bars, bar closed BEFORE an event at t >= bar_end is applied,
+             gap-flagged segments, no fabricated bars past max_gap
+  inference  purged walk-forward (train ends h before test), Campbell-
+             Thompson OOS R^2, Newey-West HAC with bandwidth >= h, moving-
+             block bootstrap CIs, CKS contemporaneous R^2 at 1/10/60 s
+  fees       Coinbase taker tiers, Hyperliquid taker, spread: edge minus cost
+  leadlag    Hyperliquid vs Coinbase signed flow at 100 ms .. 5 s; books >= 1 s
+  report     results/README.md in fixed order (a) CKS (b) forward (c) fees (d) lead-lag
 """
 from __future__ import annotations
 
 import argparse
-import glob
-import gzip
-import json
-import math
+import sys
 from pathlib import Path
 
-DATA = Path(__file__).resolve().parent / "data" / "coinbase"
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from ofi import report  # noqa: E402
+from ofi.run import DEFAULT_PARAMS, rel_to_root as _rel, run_results  # noqa: E402
 
 
-def iter_messages(product: str):
-    """Yield (t_ns, msg) for one product from all recorded hours, in order."""
-    for path in sorted(glob.glob(str(DATA / "*" / "*.jsonl.gz"))):
-        try:
-            with gzip.open(path, "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    try:
-                        d = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue      # torn final line from a hard stop
-                    m = d["m"]
-                    if isinstance(m, dict) and m.get("product_id") == product:
-                        yield d["t_ns"], m
-        except EOFError:
-            # The recorder is still writing this hour's file, so its last
-            # gzip member has no end-of-stream marker yet. Everything read
-            # before the tear is valid; analysis on live data expects this.
-            continue
+def rel_to_root(path) -> str:
+    return _rel(path, ROOT)
 
 
-def bars_from_book(product: str, bar_s: float):
-    """One-second (default) bars: (t_end_ns, mid, ofi_sum).
+def _params(args) -> dict:
+    p = dict(DEFAULT_PARAMS)
+    p.update({
+        "bar_s": args.bar, "max_gap_s": args.max_gap, "k_levels": args.levels,
+        "horizons_s": [float(x) if "." in x else int(x)
+                       for x in args.horizons.split(",") if x],
+        "n_folds": args.folds, "expanding": not args.rolling,
+        "n_boot": args.n_boot, "seed": args.seed, "decile": args.decile,
+    })
+    return p
 
-    The book is a dict price -> size, rebuilt from each snapshot and patched
-    by every l2update. Best levels are tracked incrementally; OFI uses the
-    best-level formulation: contributions from changes at (or through) the
-    inside, signed by side and by whether the inside improved or retreated.
+
+def _common(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument("--manifest", default=str(ROOT / "manifest.json"))
+    sp.add_argument("--data-root", default=None,
+                    help="override the data directory the manifest keys resolve in")
+    sp.add_argument("--bar", type=float, default=DEFAULT_PARAMS["bar_s"])
+    sp.add_argument("--max-gap", type=float, default=DEFAULT_PARAMS["max_gap_s"],
+                    help="seconds of silence after which bars stop (no stale bars)")
+    sp.add_argument("--levels", type=int, default=DEFAULT_PARAMS["k_levels"])
+    sp.add_argument("--horizons", default=",".join(str(h) for h in DEFAULT_PARAMS["horizons_s"]),
+                    help="forward horizons in seconds")
+    sp.add_argument("--folds", type=int, default=DEFAULT_PARAMS["n_folds"])
+    sp.add_argument("--rolling", action="store_true",
+                    help="rolling one-chunk training instead of expanding")
+    sp.add_argument("--n-boot", type=int, default=DEFAULT_PARAMS["n_boot"])
+    sp.add_argument("--seed", type=int, default=DEFAULT_PARAMS["seed"])
+    sp.add_argument("--decile", type=float, default=DEFAULT_PARAMS["decile"])
+
+
+FIXTURE_MANIFEST = "tests/fixtures/synthetic/manifest.json"
+
+
+def reproducing_command(args) -> str:
+    """The command a reader can actually run to regenerate this report.
+
+    Both Makefile targets call `analyze.py results`, so the subcommand does
+    not identify them; the manifest does. `make results` reads
+    manifest.json and writes results/, `make smoke` reads the committed
+    synthetic fixture and writes results/self-test/ -- one cannot produce
+    the other's file. Falling back to a hard-coded "make results" (which is
+    what happened before) printed a command that does not regenerate
+    results/self-test/README.md at the top of results/self-test/README.md.
     """
-    bids: dict[float, float] = {}
-    asks: dict[float, float] = {}
-    best_b = best_a = None
-    prev_b = prev_a = None            # (price, size) at last observation
-    bar_end = None
-    ofi = 0.0
-    n_snapshots = 0
-    bar_ns = int(bar_s * 1e9)
-
-    for t_ns, m in iter_messages(product):
-        typ = m.get("type")
-        if typ == "snapshot":
-            bids = {float(p): float(s) for p, s in m["bids"]}
-            asks = {float(p): float(s) for p, s in m["asks"]}
-            best_b = max(bids) if bids else None
-            best_a = min(asks) if asks else None
-            prev_b = (best_b, bids.get(best_b, 0.0)) if best_b else None
-            prev_a = (best_a, asks.get(best_a, 0.0)) if best_a else None
-            n_snapshots += 1
-            continue
-        if typ != "l2update" or best_b is None or best_a is None:
-            continue
-
-        for side, price_s, size_s in m.get("changes", []):
-            price, size = float(price_s), float(size_s)
-            book = bids if side == "buy" else asks
-            if size == 0.0:
-                book.pop(price, None)
-            else:
-                book[price] = size
-            if side == "buy" and (price >= (best_b or -1) or size == 0.0):
-                best_b = max(bids) if bids else None
-            elif side == "sell" and (price <= (best_a or 1e18) or size == 0.0):
-                best_a = min(asks) if asks else None
-
-        if not bids or not asks:
-            continue
-        cur_b = (best_b, bids[best_b])
-        cur_a = (best_a, asks[best_a])
-        # Cont-Kukanov-Stoikov best-level OFI increments
-        if prev_b is not None:
-            if cur_b[0] > prev_b[0]:
-                ofi += cur_b[1]
-            elif cur_b[0] < prev_b[0]:
-                ofi -= prev_b[1]
-            else:
-                ofi += cur_b[1] - prev_b[1]
-        if prev_a is not None:
-            if cur_a[0] < prev_a[0]:
-                ofi -= cur_a[1]
-            elif cur_a[0] > prev_a[0]:
-                ofi += prev_a[1]
-            else:
-                ofi -= cur_a[1] - prev_a[1]
-        prev_b, prev_a = cur_b, cur_a
-
-        if bar_end is None:
-            bar_end = (t_ns // bar_ns + 1) * bar_ns
-        while t_ns >= bar_end:
-            yield bar_end, (best_b + best_a) / 2.0, ofi
-            ofi = 0.0
-            bar_end += bar_ns
-
-    print(f"  ({n_snapshots} snapshots seen; each resets the book)")
+    rel = rel_to_root(args.manifest)
+    if rel == FIXTURE_MANIFEST:
+        return "make smoke"
+    if rel == "manifest.json":
+        return "make results"
+    return f"python analyze.py results --manifest {rel}"
 
 
-def walk_forward(xs, ys, n_folds: int):
-    """Time-ordered folds: fit slope on fold i, score on fold i+1."""
-    n = len(xs)
-    fold = n // (n_folds + 1)
-    results = []
-    for i in range(n_folds):
-        tr = slice(i * fold, (i + 1) * fold)
-        te = slice((i + 1) * fold, (i + 2) * fold)
-        xtr, ytr, xte, yte = xs[tr], ys[tr], xs[te], ys[te]
-        mx = sum(xtr) / len(xtr)
-        my = sum(ytr) / len(ytr)
-        sxx = sum((x - mx) ** 2 for x in xtr)
-        if sxx == 0:
-            continue
-        beta = sum((x - mx) * (y - my) for x, y in zip(xtr, ytr)) / sxx
-        alpha = my - beta * mx
-        pred = [alpha + beta * x for x in xte]
-        ss_res = sum((p - y) ** 2 for p, y in zip(pred, yte))
-        mte = sum(yte) / len(yte)
-        ss_tot = sum((y - mte) ** 2 for y in yte)
-        r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
-        results.append((len(xte), beta, r2))
-    return results
+def cmd_results(args) -> int:
+    results = run_results(Path(args.manifest), args.data_root, _params(args),
+                          repo_root=ROOT)
+    results["command"] = reproducing_command(args)
+    md, js = report.write(results, Path(args.out))
+    print(f"wrote {md} and {js}")
+    if not results["days"]:
+        print("no analysable day in the manifest; the report says so")
+    return 0
 
 
-def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    p.add_argument("--product", default="BTC-USD")
-    p.add_argument("--bar", type=float, default=1.0, help="bar size, seconds")
-    p.add_argument("--horizons", default="1,5,30",
-                   help="forward-return horizons in bars")
-    p.add_argument("--folds", type=int, default=4)
-    args = p.parse_args()
+def cmd_day(args) -> int:
+    import json
+    from ofi.run import days_from_manifest, analyse_day
+    with open(args.manifest, "r", encoding="utf-8") as fh:
+        manifest = json.load(fh)
+    groups = days_from_manifest(manifest, Path(args.manifest).parent, ROOT,
+                                Path(args.data_root) if args.data_root else None)
+    key = ("coinbase", args.symbol, args.day)
+    if key not in groups or not groups[key]["files"]:
+        print(f"no readable files for {'/'.join(key)} in {args.manifest}")
+        return 1
+    p = _params(args)
+    coin = args.symbol.split("-")[0]
+    hl = {"trades": [q for _, q, _ in groups.get(("hyperliquid", f"{coin}-trades", args.day), {"files": []})["files"]],
+          "l2Book": [q for _, q, _ in groups.get(("hyperliquid", f"{coin}-l2Book", args.day), {"files": []})["files"]]}
+    res, _ = analyse_day(key, groups[key], hl, p)
+    results = {"params": p, "manifest": rel_to_root(args.manifest),
+               "manifest_updated_at": manifest.get("updated_at"),
+               "n_manifest_files": len(manifest.get("files", {})),
+               "command": f"python analyze.py day --symbol {args.symbol} "
+                          f"--day {args.day}",
+               "days": [res], "pooled": None, "skipped": []}
+    sys.stdout.write(report.build_markdown(results))
+    return 0
 
-    print(f"rebuilding {args.product} book at {args.bar:g}s bars ...")
-    bars = list(bars_from_book(args.product, args.bar))
-    if len(bars) < 200:
-        raise SystemExit(f"only {len(bars)} bars recorded so far; the "
-                         f"pipeline needs a few hundred to demonstrate and "
-                         f"weeks to conclude. Let the recorder run.")
-    mids = [b[1] for b in bars]
-    ofis = [b[2] for b in bars]
-    hours = len(bars) * args.bar / 3600.0
-    print(f"{len(bars):,} bars ({hours:.1f} hours of book time)")
 
-    for h in [int(x) for x in args.horizons.split(",")]:
-        xs = ofis[:-h]
-        ys = [math.log(mids[i + h] / mids[i]) * 1e4          # bps
-              for i in range(len(mids) - h)]
-        folds = walk_forward(xs, ys, args.folds)
-        print(f"\nhorizon {h} bar(s): forward return (bps) on OFI, "
-              f"{len(folds)} walk-forward folds")
-        for i, (n, beta, r2) in enumerate(folds):
-            print(f"  fold {i + 1}: n={n:>6,}  beta={beta:+.3e}  "
-                  f"oos R2={r2:+.4f}")
-        pos = sum(1 for _, b, _ in folds if b > 0)
-        print(f"  slope sign agreement: {pos}/{len(folds)} folds positive")
-
-    print("\nNOTE: this run is a pipeline demonstration on whatever is "
-          "recorded so far. Signal conclusions require weeks of data and "
-          "the fee/impact analysis of Phase 2.")
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    r = sub.add_parser("results", help="run every manifest day, write results/")
+    _common(r)
+    r.add_argument("--out", default=str(ROOT / "results"))
+    r.set_defaults(fn=cmd_results)
+    d = sub.add_parser("day", help="analyse one day and print its tables")
+    _common(d)
+    d.add_argument("--symbol", default="BTC-USD")
+    d.add_argument("--day", required=True, help="YYYY-MM-DD")
+    d.set_defaults(fn=cmd_day)
+    args = ap.parse_args(argv)
+    return args.fn(args)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
