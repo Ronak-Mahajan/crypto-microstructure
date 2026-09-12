@@ -1,0 +1,136 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+      - 'rebuild/**'
+      - 'fix/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # full history: the failure-log step below rebases onto the branch, and
+      # a depth-1 checkout has no merge base to rebase onto once CI has
+      # already written one log back.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: install
+        run: |
+          set -o pipefail
+          python -m pip install --quiet -r requirements.txt pytest 2>&1 | tee -a ci.log
+
+      - name: compile
+        run: |
+          python -m py_compile record.py analyze.py tardis_loader.py ofi/*.py 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      - name: tests
+        run: |
+          make test PYTHON=python 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      # `verify` on the real manifest is vacuous today (it lists no files),
+      # so it is run against the committed fixture manifest as well, which
+      # DOES list three. That checks the shipped bytes against the shipped
+      # sha256s on the CI machine -- i.e. that nothing mangled them between
+      # here and Linux -- and it is the only step that runs the verify path
+      # on real input. --strict so "missing" fails rather than passing
+      # quietly; the files are committed, so missing means something is
+      # wrong.
+      - name: loader cli smoke (offline)
+        run: |
+          set -o pipefail
+          python tardis_loader.py --help 2>&1 | tee -a ci.log
+          python tardis_loader.py verify --quiet 2>&1 | tee -a ci.log
+          python tardis_loader.py verify --strict \
+            --manifest tests/fixtures/synthetic/manifest.json 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      # The whole measurement pipeline over the committed synthetic fixture:
+      # no network, a couple of seconds, and it must write a real (tiny)
+      # table. This is what stops book/features/bars/inference/report from
+      # silently ceasing to produce results while the unit tests stay green.
+      # OUT is a scratch directory, never the committed results/self-test:
+      # regenerating a tracked file here would leave the tree dirty and the
+      # failure-log step below could not rebase.
+      - name: pipeline smoke over the synthetic fixture
+        run: |
+          set -o pipefail
+          rm -rf /tmp/smoke
+          make smoke PYTHON=python OUT=/tmp/smoke 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      - name: the smoke table is real, and labelled as a self-test
+        run: |
+          set -o pipefail
+          {
+            OUT=/tmp/smoke/self-test/README.md
+            test -s "$OUT" || { echo "FAIL: $OUT missing or empty"; exit 1; }
+            test -s /tmp/smoke/self-test/results.json || { echo "FAIL: results.json missing"; exit 1; }
+            for want in '## Data' '## (a) CKS' '## (b) Forward' '## (c) Fee hurdle' '## (d) Cross-venue'; do
+              grep -qF "$want" "$OUT" || { echo "FAIL: section missing: $want"; exit 1; }
+            done
+            grep -qF 'NOT A MARKET RESULT' "$OUT" || { echo "FAIL: synthetic banner missing"; exit 1; }
+            grep -qE '^\| coinbase/BTC-USD/[0-9-]+ \|' "$OUT" || { echo "FAIL: no day row in the data table"; exit 1; }
+            grep -qE '^\| best-level OFI \| 1 s \| -?[0-9]' "$OUT" || { echo "FAIL: no OFI row with a number"; exit 1; }
+            # the fee hurdle must keep declaring what share of the out-of-sample
+            # set it actually traded; on the fixture at least one row sits on a
+            # tied prediction plateau and must say so rather than pass itself
+            # off as a clean decile
+            grep -qF 'share of OOS' "$OUT" || { echo "FAIL: fee hurdle does not declare its traded share"; exit 1; }
+            grep -qF 'tied)' "$OUT" || { echo "FAIL: tied plateau not declared"; exit 1; }
+            grep -qF 'spread charged' "$OUT" || { echo "FAIL: fee hurdle does not show the spread it charged"; exit 1; }
+            # the pipes in `mean |pred| (bps)` must stay escaped: bare, they
+            # end their own cell and the header comes out two cells wider
+            # than the separator, so GitHub renders (c) with the last two
+            # scenario columns unnamed. tests/test_report.py proves the cell
+            # counts match; this is the same check on the shipped artifact.
+            # (tests/test_report.py asserts the cell counts match on the
+            # report this same code generates; this is the cheap check on
+            # the shipped artifact itself.)
+            grep -qF 'mean \|pred\| (bps)' "$OUT" || { echo "FAIL: fee hurdle header pipes are not escaped"; exit 1; }
+            echo "smoke table OK: $(wc -l < "$OUT") lines"
+          } 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      # `make results` on the real manifest. Today that manifest is empty and
+      # the honest output is "no day is analysable yet" -- which is a GREEN
+      # state, not a red one. It turns into a real table the day the owner
+      # pulls a Tardis day, with no change to this workflow.
+      - name: results on the real manifest (empty manifest must still pass)
+        run: |
+          set -o pipefail
+          make results PYTHON=python OUT=/tmp/results-real NBOOT=20 2>&1 | tee -a ci.log
+          exit ${PIPESTATUS[0]}
+
+      # Push events only: on a pull_request, GITHUB_REF_NAME is "<n>/merge",
+      # which is not a branch anyone can push to, so this step would fail a
+      # second time and bury the real failure under a git error.
+      - name: save failure log
+        if: failure() && github.event_name == 'push' && github.ref != 'refs/heads/main'
+        run: |
+          mkdir -p .ci
+          tail -c 60000 ci.log > .ci/last-failure-test.log || true
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git add .ci/last-failure-test.log
+          git commit -m "ci: failure log [skip ci]" || exit 0
+          # a half-finished step may have left tracked files modified; the
+          # rebase below refuses to run with a dirty tree
+          git checkout -- . || true
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"

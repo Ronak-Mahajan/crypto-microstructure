@@ -1,0 +1,6 @@
+{
+ "schema": 1,
+ "files": {},
+ "days": {},
+ "note": "Written by tardis_loader.py (fetch / hash). Keys under files are repo-relative paths of data/<venue>/<product>/<YYYYMMDD-HH>.jsonl.gz with sha256, bytes, lines, source (tardis|recorder), exchange, symbol, day, hour. Keys under days are <exchange>/<symbol>/<YYYY-MM-DD> with per-channel message counts and the arrival time of the first snapshot. The data files themselves are gitignored; this manifest is the committed record of exactly which bytes any published number was computed from."
+}
