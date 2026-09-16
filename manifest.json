@@ -1,6 +1,304 @@
 {
  "schema": 1,
- "files": {},
- "days": {},
- "note": "Written by tardis_loader.py (fetch / hash). Keys under files are repo-relative paths of data/<venue>/<product>/<YYYYMMDD-HH>.jsonl.gz with sha256, bytes, lines, source (tardis|recorder), exchange, symbol, day, hour. Keys under days are <exchange>/<symbol>/<YYYY-MM-DD> with per-channel message counts and the arrival time of the first snapshot. The data files themselves are gitignored; this manifest is the committed record of exactly which bytes any published number was computed from."
+ "files": {
+  "data/coinbase/BTC-USD/20260901-00.jsonl.gz": {
+   "sha256": "bfdcb78642aa56ce4f4e85b49c77b7039749d92668f6ca243d1c8b539a470774",
+   "bytes": 23917645,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 0,
+   "lines": 1443260
+  },
+  "data/coinbase/BTC-USD/20260901-01.jsonl.gz": {
+   "sha256": "a09ba7b7226388538b2f645324bbc8ee21ab09c9d4ec6d9fb8c39219983f0564",
+   "bytes": 27053591,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 1,
+   "lines": 1652567
+  },
+  "data/coinbase/BTC-USD/20260901-02.jsonl.gz": {
+   "sha256": "82a5ee08bb57e00162b6a69f55f12376074bb603403d2f59a0f20c7f6bab4f60",
+   "bytes": 24458263,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 2,
+   "lines": 1506542
+  },
+  "data/coinbase/BTC-USD/20260901-03.jsonl.gz": {
+   "sha256": "0baf02db5398c07788dc82afceb2429a7222dde682481a6daadcf7d95ca07c82",
+   "bytes": 23730581,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 3,
+   "lines": 1468032
+  },
+  "data/coinbase/BTC-USD/20260901-04.jsonl.gz": {
+   "sha256": "582a920c9149ca17475eeb9207127f93302dc4827d832bff80c974e4c1d04244",
+   "bytes": 21373184,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 4,
+   "lines": 1325894
+  },
+  "data/coinbase/BTC-USD/20260901-05.jsonl.gz": {
+   "sha256": "869e6d853c3c1b2e3cafbb39aa3545720e1f692305f1e7e9c2a16007671240ce",
+   "bytes": 26153493,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 5,
+   "lines": 1585317
+  },
+  "data/coinbase/BTC-USD/20260901-06.jsonl.gz": {
+   "sha256": "552a6e2990c1fc441ba9ab5bae7c595ac1ebd43dc5625bab7c1900e654c2b806",
+   "bytes": 21235904,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 6,
+   "lines": 1326340
+  },
+  "data/coinbase/BTC-USD/20260901-07.jsonl.gz": {
+   "sha256": "68f6413860a03b67f3df9494c59bffedbaa9e56a68b9c3a8c1c5e3445e52c08d",
+   "bytes": 22991904,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 7,
+   "lines": 1419692
+  },
+  "data/coinbase/BTC-USD/20260901-08.jsonl.gz": {
+   "sha256": "d78513a4006def82c3214e2eafee35b1268417750e79720be947effbb9902579",
+   "bytes": 36798043,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 8,
+   "lines": 2222887
+  },
+  "data/coinbase/BTC-USD/20260901-09.jsonl.gz": {
+   "sha256": "cd8cb7a52e417a5895a7af20fabae33ad0a574eb5c4252da92a4d0b8ec75fa0f",
+   "bytes": 23974345,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 9,
+   "lines": 1443799
+  },
+  "data/coinbase/BTC-USD/20260901-10.jsonl.gz": {
+   "sha256": "a208bbdbffa23a3240672e06343e652e7b9f6a7c16a971bf99b3a9062e81b507",
+   "bytes": 25455525,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 10,
+   "lines": 1553939
+  },
+  "data/coinbase/BTC-USD/20260901-11.jsonl.gz": {
+   "sha256": "06115b0e73bbe360366124b8216beae21965b61c9fd9a2eb924940bd252b3cba",
+   "bytes": 23541900,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 11,
+   "lines": 1438914
+  },
+  "data/coinbase/BTC-USD/20260901-12.jsonl.gz": {
+   "sha256": "097cd2f6aa0b069974e102ad7f9350b018229dd78819cf715d6af1dc3c6f8307",
+   "bytes": 32743514,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 12,
+   "lines": 1950144
+  },
+  "data/coinbase/BTC-USD/20260901-13.jsonl.gz": {
+   "sha256": "4ad43b255f0faf090be24db32f60e55ad6b06e63ff7ee249b4891e2d4c57f1e7",
+   "bytes": 57180158,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 13,
+   "lines": 3365890
+  },
+  "data/coinbase/BTC-USD/20260901-14.jsonl.gz": {
+   "sha256": "6a1ebad5a5631c479e95a4215b3b0497feaefac074fb6c7eeba210a15904abdd",
+   "bytes": 43883824,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 14,
+   "lines": 2646745
+  },
+  "data/coinbase/BTC-USD/20260901-15.jsonl.gz": {
+   "sha256": "b0108992df3e5451cfbe5ddde9fa9c8be199d04f2961db6f97e1e8e72de7cd93",
+   "bytes": 33859134,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 15,
+   "lines": 2062550
+  },
+  "data/coinbase/BTC-USD/20260901-16.jsonl.gz": {
+   "sha256": "b836ec522f88b0705fab0800b45a940e6d29ef79cf10cf72a3a3ca8e98b52694",
+   "bytes": 41699356,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 16,
+   "lines": 2522055
+  },
+  "data/coinbase/BTC-USD/20260901-17.jsonl.gz": {
+   "sha256": "ced7215fc6534fa6d0e129d952b9eb9ba403b29c6ed419a02e4f73209e0729a4",
+   "bytes": 33003762,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 17,
+   "lines": 1997191
+  },
+  "data/coinbase/BTC-USD/20260901-18.jsonl.gz": {
+   "sha256": "ebf73b68b92a9ccfbb0ef94f0d38e16f6fd2cdc8f3a8fcd7cb1a5c9a622dd4c5",
+   "bytes": 50774411,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 18,
+   "lines": 3027914
+  },
+  "data/coinbase/BTC-USD/20260901-19.jsonl.gz": {
+   "sha256": "f401fec0cec0a44a88dd9ed513252800a9bfd724ad52399ea663cfcc05b870dc",
+   "bytes": 34011876,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 19,
+   "lines": 2051849
+  },
+  "data/coinbase/BTC-USD/20260901-20.jsonl.gz": {
+   "sha256": "01fe9bc29071317df0402d3b04643294183028fac1233006839bfd82b85632cf",
+   "bytes": 24089378,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 20,
+   "lines": 1461212
+  },
+  "data/coinbase/BTC-USD/20260901-21.jsonl.gz": {
+   "sha256": "43efca980661d5a7e777dbd5a8b9e197872415f4ad876a2d18684655927bd6f5",
+   "bytes": 26094559,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 21,
+   "lines": 1379464
+  },
+  "data/coinbase/BTC-USD/20260901-22.jsonl.gz": {
+   "sha256": "c6f237cd4efb725c09536cb7aefd7edad3290d3d70b0cc5117d5c9fc49b4e182",
+   "bytes": 23820793,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 22,
+   "lines": 1464963
+  },
+  "data/coinbase/BTC-USD/20260901-23.jsonl.gz": {
+   "sha256": "596d62ee73d061bf8016328601abedc772866e607ba4d9eb646b338185043d1f",
+   "bytes": 23048332,
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "hour": 23,
+   "lines": 1426464
+  }
+ },
+ "days": {
+  "coinbase/BTC-USD/2026-09-01": {
+   "source": "tardis",
+   "exchange": "coinbase",
+   "symbol": "BTC-USD",
+   "day": "2026-09-01",
+   "channels": [
+    "snapshot",
+    "l2update",
+    "match"
+   ],
+   "api": "https://api.tardis.dev/v1/data-feeds",
+   "slice_size": 10,
+   "minutes": 1440,
+   "partial": false,
+   "fetched_at": "2026-09-16T07:07:28Z",
+   "download_bytes": 689021985,
+   "lines": 43743612,
+   "bad_lines": 0,
+   "out_of_order_lines": 0,
+   "disconnects": 12,
+   "messages": {
+    "l2update": 43150164,
+    "match": 593435,
+    "snapshot": 13
+   },
+   "first_t_ns": 1788220800023179500,
+   "last_t_ns": 1788307199974712700,
+   "first_snapshot_t_ns": 1788220800398998900,
+   "bytes": 724893475,
+   "files": [
+    "data/coinbase/BTC-USD/20260901-00.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-01.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-02.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-03.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-04.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-05.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-06.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-07.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-08.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-09.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-10.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-11.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-12.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-13.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-14.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-15.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-16.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-17.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-18.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-19.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-20.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-21.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-22.jsonl.gz",
+    "data/coinbase/BTC-USD/20260901-23.jsonl.gz"
+   ]
+  }
+ },
+ "updated_at": "2026-09-16T07:07:29Z"
 }
