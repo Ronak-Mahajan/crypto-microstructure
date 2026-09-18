@@ -44,24 +44,34 @@ does not pay for taking.
 On Coinbase BTC-USD for 2026-09-01 (43,743,612 messages, 86,379 one-second
 bars, a rebuilt book matching every resent snapshot that follows no gap,
 zero crossed messages), order-flow imbalance predicts the next second out
-of sample: multi-level OFI reaches an OOS R^2 of 0.0081, block-bootstrap CI
-[0.0046, 0.0117], and best-level OFI 0.0055, CI [0.0034, 0.0078]. Both
-decay to nothing by a minute. Micro-price deviation and signed trade flow
-are not distinguishable from zero at any horizon. As a sanity anchor the
-contemporaneous CKS regression gives an R^2 of 47.1% at 10 s averaged over
-half-hour windows, against the roughly 65% of the original paper.
+of sample. Four purged expanding walk-forward folds leave 69,090 pooled
+out-of-sample bars at a one-second horizon; on them multi-level OFI reaches
+an OOS R^2 of 0.0081, block-bootstrap CI [0.0046, 0.0117], and best-level
+OFI 0.0055, CI [0.0034, 0.0078]. Those CIs exclude zero at 1 s and 5 s for
+both, at 10 s for best-level only, and straddle zero from 30 s onward, so
+the signal is gone well before a minute. Micro-price deviation and signed
+trade flow have CIs that straddle zero at every horizon. As a sanity anchor
+the contemporaneous CKS regression gives an R^2 of 47.1% at 10 s averaged
+over half-hour windows, against the roughly 65% of the original paper.
 
-Then the fee hurdle takes it away. The top decile of |prediction| earns
-0.13 to 0.26 bps of realised mid move, and the cheapest taking scenario in
-the table costs about 7 bps, so every take column is negative by an order
-of magnitude. The only positive column is passive quoting at a zero maker
-fee, +0.26 to +0.39 bps, and that scenario assumes both sides fill with no
-adverse selection, which is the assumption a real book breaks first. A
-well-measured negative is a result, and this is one: on one day of one
-pair, OFI is predictive and not tradable through the spread.
+Then the fee hurdle takes it away. On the eight OFI rows from 1 s to 30 s,
+the top decile of |prediction| earns 0.13 to 0.26 bps of realised mid move;
+0.26 bps is the largest realised edge anywhere in the table, and the 300 s
+rows are all negative. The cheapest taking scenario in the table costs
+about 7 bps (two 3.5 bps Hyperliquid legacy taker fees plus the spread
+those bars quoted), so every take column is negative by an order of
+magnitude. The
+only positive column is passive quoting at a zero maker fee, +0.25 to
++0.39 bps over the same rows, and that scenario assumes both sides fill
+with no adverse selection, which is the assumption a real book breaks
+first. A well-measured negative is a result, and this is one: on one day of
+one pair, OFI is predictive and not tradable through the spread.
 
-One day is one day. It is a measurement, not a rate, and every number above
-regenerates with `make results` from `manifest.json`.
+One day is one day. It is a measurement, not a rate. Every number above is
+written by `make results` from `manifest.json` and the data files it lists;
+those files are gitignored, so regenerating them means re-pulling the day
+with `make fetch DAY=2026-09-01` first (see **Data** for what `make verify`
+does and does not pin after a re-pull).
 
 ## Data
 
@@ -85,10 +95,11 @@ marker lines in the same file so gaps stay in the record. Without an API key
 only `YYYY-MM-01` days are served; the loader refuses other days up front.
 
 Size, honestly: Coinbase publishes level-2 unbatched, so a BTC-USD day is
-millions of `l2update` messages. Expect a multi-GB download per day and on
-the order of 1-3 GB gzipped on disk; the loader streams ten minutes at a
-time and never holds more than one slice in memory, but the disk is yours.
-The true byte count of every pulled day is written to the manifest.
+millions of `l2update` messages. The one day pulled so far, 2026-09-01, was
+43.7M messages, 689 MB over the wire and 725 MB gzipped on disk in 24 hourly
+files; a busier day will be larger. The loader streams ten minutes at a time
+and never holds more than one slice in memory, but the disk is yours. The
+true byte count of every pulled day is written to the manifest.
 
 ### Self-recorded days
 
@@ -120,6 +131,18 @@ per Tardis day the message counts by channel and the arrival time of the
 first snapshot. Data files are gitignored; the manifest is the committed
 statement of exactly which bytes any published number came from.
 
+What that pins, precisely: the sha256 is of the gzip file, and `gzip` stamps
+the wall-clock time of the write into its header. So `make verify` confirms
+that the files on the machine that published a number are unchanged, but a
+fresh `make fetch` of the same day writes new headers and reports all 24 as
+CHANGED even when the data is identical. Re-pulling 2026-09-01 on
+2026-09-18 reproduced the *decompressed* content byte for byte on every
+hour that completed (17 of 24, checked by sha256 of the uncompressed
+stream) at exactly the recorded file sizes, with only the gzip header
+timestamp differing. Read a CHANGED line after a re-pull as that, not as a
+changed capture; the recorder and the loader do not yet write a fixed
+header timestamp, which is what would make a re-pull hash-identical.
+
 ## The plan
 
 **Phase 1, signal.** Rebuild books from the recorded diffs; compute
@@ -145,7 +168,7 @@ whose simulator assumed them.
 
 ```
 make test                    # 145 offline tests
-make fetch DAY=2025-08-01    # one Tardis free day into data/ and the manifest
+make fetch DAY=2026-09-01    # the measured day, into data/ and the manifest
 make verify                  # re-hash every file the manifest lists
 make results                 # regenerate results/ from manifest.json
 make smoke                   # the whole pipeline over the synthetic fixture
@@ -154,8 +177,10 @@ make smoke                   # the whole pipeline over the synthetic fixture
 `make results` and `make smoke` are the only ways a table in `results/` is
 ever written; no number in this repo is typed in by hand, and each
 generated report names in its own header the command that produced it.
-With an empty manifest `make results` still runs and the report states that
-no day is analysable yet, which is the honest output rather than an error.
+When no file the manifest lists is readable -- an empty manifest, or a
+clone without the gitignored data -- `make results` still runs and the
+report states that no day is analysable, which is the honest output rather
+than an error.
 
 `make smoke` runs the same pipeline over `tests/fixtures/synthetic/`, a
 64 KiB committed fixture of 4,817 hand-generated messages across three
@@ -171,9 +196,11 @@ CI (ubuntu) runs `make test`, re-hashes the committed fixture against the
 sha256s in its manifest (`verify --strict`, so the Linux runner confirms
 the shipped bytes are the shipped bytes), then the fixture smoke, then
 asserts the generated report really contains all four sections and a
-numeric OFI row, then runs `make results` on the real (currently empty)
-manifest, which must exit green. Failure logs are committed back to the
-branch under `.ci/`.
+numeric OFI row, then runs `make results` on the real manifest, whose data
+files are not in the clone, and requires the no-analysable-day path to exit
+green. CI therefore checks the pipeline and the fixture, never the market
+numbers: those are reproduced by re-pulling the day. Failure logs are
+committed back to the branch under `.ci/`.
 
 ## Ground rules
 
