@@ -43,11 +43,12 @@ jobs:
           make test PYTHON=python 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
-      # `verify` on the real manifest is vacuous today (it lists no files),
-      # so it is run against the committed fixture manifest as well, which
-      # DOES list three. That checks the shipped bytes against the shipped
-      # sha256s on the CI machine -- i.e. that nothing mangled them between
-      # here and Linux -- and it is the only step that runs the verify path
+      # The real manifest lists the 24 hourly files of the measured day, but
+      # those files are gitignored, so `verify` on it can only report them
+      # missing. It is therefore run against the committed fixture manifest,
+      # which lists three files that ARE in the tree. That checks the shipped
+      # bytes against the shipped sha256s on the CI machine (nothing mangled
+      # them between here and Linux), and it is the only step that runs the verify path
       # on real input. --strict so "missing" fails rather than passing
       # quietly; the files are committed, so missing means something is
       # wrong.
@@ -107,11 +108,11 @@ jobs:
           } 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
-      # `make results` on the real manifest. Today that manifest is empty and
-      # the honest output is "no day is analysable yet" -- which is a GREEN
-      # state, not a red one. It turns into a real table the day the owner
-      # pulls a Tardis day, with no change to this workflow.
-      - name: results on the real manifest (empty manifest must still pass)
+      # `make results` on the real manifest. Its data files are gitignored, so
+      # in a clone the output is "no day is analysable", which is a GREEN state:
+      # this step checks the no-data path, never the market numbers. Those are
+      # reproduced by pulling the day with `make fetch` and running it locally.
+      - name: results on the real manifest (no data in the clone must still pass)
         run: |
           set -o pipefail
           make results PYTHON=python OUT=/tmp/results-real NBOOT=20 2>&1 | tee -a ci.log
