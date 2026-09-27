@@ -437,8 +437,24 @@ def fetch_day(exchange: str, symbol: str, day: str, channels: tuple,
     finally:
         writer.close()
 
+    staged = sorted(stage.glob("*.jsonl.gz"))
+    removed = []
+    if force:
+        # --force replaces the day, not only the hours this run produced:
+        # an hour left over from an earlier pull of the same day would
+        # otherwise be analysed alongside this one. Done only now, after the
+        # download has finished, so an interrupted run destroys nothing.
+        keep = {f.name for f in staged}
+        for old in existing:
+            if old.name not in keep and old.exists():
+                old.unlink()
+                removed.append(old)
+        if removed:
+            log(f"  removed {len(removed)} hour file(s) of {day} this pull "
+                f"did not produce: {', '.join(p.name for p in removed)}",
+                flush=True)
     files = []
-    for f in sorted(stage.glob("*.jsonl.gz")):
+    for f in staged:
         target = out_dir / f.name
         f.replace(target)
         files.append((target, writer.lines.get(f.name[:-len(".jsonl.gz")], 0)))
@@ -457,7 +473,7 @@ def fetch_day(exchange: str, symbol: str, day: str, channels: tuple,
         "messages": dict(sorted(counts.items())),
         "first_t_ns": first_ns, "last_t_ns": last_ns,
         "first_snapshot_t_ns": first_snapshot_ns,
-        "files": files,
+        "files": files, "removed": removed,
     }
 
 
@@ -489,6 +505,7 @@ def record_day(manifest: dict, stats: dict, update: bool = False,
     Returns {"status": {key: label}, "changed": bool, "written": bool}.
     """
     files = stats.pop("files")
+    stats.pop("removed", None)
     ex, sym, day = stats["exchange"], stats["symbol"], stats["day"]
     day_key = f"{ex}/{sym}/{day}"
     entries = {}
@@ -705,7 +722,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Tardis API key (or env TARDIS_API_KEY); optional")
     f.add_argument("--compresslevel", type=int, default=6)
     f.add_argument("--force", action="store_true",
-                   help="overwrite files for a day that already exists")
+                   help="replace a day's files on disk: every hour file of "
+                        "the day this pull does not produce is deleted")
     f.add_argument("--update-manifest", action="store_true",
                    help="record this pull even when the manifest already "
                         "records the day with different content")

@@ -368,6 +368,43 @@ def test_fetch_cli_exits_1_and_keeps_the_manifest_on_a_changed_day(tmp_path,
     assert mpath.read_text(encoding="utf-8") != committed
 
 
+def test_force_refetch_replaces_the_whole_day(tmp_path, monkeypatch):
+    """A shorter --force pull must not leave the longer pull's hours behind."""
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    lines = _fake_day_lines("2025-08-01")
+    mpath = tmp_path / "manifest.json"
+    m = tl.load_manifest(mpath)
+    tl.record_day(m, _pull(tmp_path, lines), log=_quiet)
+    tl.save_manifest(mpath, m)
+    out_dir = tmp_path / "data" / "coinbase" / "BTC-USD"
+    assert len(list(out_dir.glob("*.jsonl.gz"))) == 3
+
+    hour0 = lines[:4]                     # snapshot, update, match, marker
+    stats = _pull(tmp_path, hour0, force=True)
+    assert [p.name for p in stats["removed"]] == ["20250801-01.jsonl.gz",
+                                                  "20250801-02.jsonl.gz"]
+    assert sorted(p.name for p in out_dir.glob("*.jsonl.gz")) == \
+        ["20250801-00.jsonl.gz"]
+
+    m = tl.load_manifest(mpath)
+    res = tl.record_day(m, stats, log=_quiet)
+    assert res["status"] == {
+        "data/coinbase/BTC-USD/20250801-00.jsonl.gz": "SAME",
+        "data/coinbase/BTC-USD/20250801-01.jsonl.gz": "ABSENT",
+        "data/coinbase/BTC-USD/20250801-02.jsonl.gz": "ABSENT"}
+    assert res["changed"] and not res["written"]
+
+    m = tl.load_manifest(mpath)
+    res = tl.record_day(m, _pull(tmp_path, hour0, force=True), update=True,
+                        log=_quiet)
+    assert res["written"]
+    assert sorted(m["files"]) == ["data/coinbase/BTC-USD/20250801-00.jsonl.gz"]
+    assert m["days"]["coinbase/BTC-USD/2025-08-01"]["files"] == \
+        ["data/coinbase/BTC-USD/20250801-00.jsonl.gz"]
+    tl.save_manifest(mpath, m)
+    assert _verify(mpath) == 0
+
+
 def test_content_digest_reads_every_member_and_a_torn_tail(tmp_path):
     p = tmp_path / "x.jsonl.gz"
     p.write_bytes(gzip.compress(b"a\nb\n", mtime=0) + gzip.compress(b"c\n", mtime=0))
