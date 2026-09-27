@@ -80,9 +80,9 @@ does and does not pin after a re-pull).
 ### Tardis free days
 
 ```
-python tardis_loader.py fetch --day 2025-08-01              # one free day
-python tardis_loader.py fetch --day 2025-08-01 --minutes 10 # one-slice smoke test
-python tardis_loader.py verify                              # recheck sha256s
+python tardis_loader.py fetch --day 2025-08-01   # one free day
+make fetch-smoke DAY=2025-08-01                  # ten minutes into data-smoke/
+python tardis_loader.py verify                   # recheck the manifest's hashes
 ```
 
 The loader calls `GET https://api.tardis.dev/v1/data-feeds/coinbase` with
@@ -179,9 +179,14 @@ make smoke                   # the whole pipeline over the synthetic fixture
 `make results` and `make smoke` are the only ways a table in `results/` is
 ever written; no number in this repo is typed in by hand, and each
 generated report names in its own header the command that produced it.
-When no file the manifest lists is readable (an empty manifest, or a clone
-without the gitignored data) `make results` still runs and the report states
-that no day is analysable, which is the honest output rather than an error.
+When a file the manifest lists is not on disk, as in a clone without the
+gitignored data, `make results` exits 2 and writes nothing;
+`make results ALLOW_MISSING=1` writes a report that lists what it could not
+analyse. Each report states per day how many listed files it read, whether
+each file's decompressed content matches its manifest hash, and how many
+lines it dropped, and `STRICT=1` makes a mismatch a refusal. A day pulled
+with fewer than 1,440 minutes is listed as partial and kept out of the
+tables.
 
 `make smoke` runs the same pipeline over `tests/fixtures/synthetic/`, a
 64 KiB committed fixture of 4,817 hand-generated messages across three
@@ -198,10 +203,11 @@ sha256s in its manifest (`verify --strict`, so the Linux runner confirms
 the shipped bytes are the shipped bytes), then the fixture smoke, then
 asserts the generated report really contains all four sections and a
 numeric OFI row, then runs `make results` on the real manifest, whose data
-files are not in the clone, and requires the no-analysable-day path to exit
-green. CI therefore checks the pipeline and the fixture, never the market
-numbers: those are reproduced by re-pulling the day. A failed run attaches
-its combined log as the `ci-log` artifact.
+files are not in the clone: it must exit 2 without writing, and with
+`ALLOW_MISSING=1` it must write a report listing the 24 missing hours. CI
+therefore checks the pipeline and the fixture, never the market numbers:
+those are reproduced by re-pulling the day. A failed run attaches its
+combined log as the `ci-log` artifact.
 
 ## Ground rules
 

@@ -325,3 +325,39 @@ def test_a_skipped_day_is_listed_next_to_an_analysed_one(tmp_path):
     text = report.build_markdown(res)
     assert ("Not analysed:\n\n- coinbase/BTC-USD/2999-12-31: files missing "
             "(1 file(s): 29991231-23)") in text
+
+
+def test_results_refuse_to_run_without_the_listed_files(tmp_path):
+    """A clone without the data must not overwrite a published report."""
+    import analyze
+    m = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    mp = tmp_path / "manifest.json"                  # keys resolve nowhere
+    mp.write_text(json.dumps(m), encoding="utf-8")
+    out = tmp_path / "out"
+    argv = ["results", "--manifest", str(mp), "--out", str(out),
+            "--folds", "2", "--n-boot", "10", "--horizons", "1"]
+    assert analyze.main(argv) == 2
+    assert not out.exists()
+    assert analyze.main(argv + ["--allow-missing"]) == 0
+    text = (out / "README.md").read_text(encoding="utf-8")
+    assert "No day is analysable yet" in text
+    assert (f"- coinbase/BTC-USD/{DAY}: files missing (1 file(s): "
+            "20010101-00)") in text
+
+
+def test_a_partial_day_is_listed_not_pooled(tmp_path):
+    from ofi.run import missing_files
+    mp = _fixture_copy(tmp_path)
+    m = json.loads(mp.read_text(encoding="utf-8"))
+    m["days"][f"coinbase/BTC-USD/{DAY}"].update({"partial": True, "minutes": 10})
+    mp.write_text(json.dumps(m), encoding="utf-8")
+    res = run_results(mp, None, SMALL, log=lambda *a, **k: None)
+    assert res["days"] == [] and res["pooled"] is None
+    assert {"key": f"coinbase/BTC-USD/{DAY}", "missing": [],
+            "reason": "partial day (10 of 1440 minutes fetched)"} in res["skipped"]
+    text = report.build_markdown(res)
+    assert (f"- coinbase/BTC-USD/{DAY}: partial day (10 of 1440 minutes "
+            "fetched)") in text
+    # its files being absent is no reason to refuse: it is not read
+    (tmp_path / "data" / "coinbase" / "BTC-USD" / "20010101-00.jsonl.gz").unlink()
+    assert f"coinbase/BTC-USD/{DAY}" not in missing_files(mp, None)

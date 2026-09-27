@@ -105,13 +105,28 @@ jobs:
           exit ${PIPESTATUS[0]}
 
       # `make results` on the real manifest. Its data files are gitignored, so
-      # in a clone the output is "no day is analysable", which is a GREEN state:
-      # this step checks the no-data path, never the market numbers. Those are
-      # reproduced by pulling the day with `make fetch` and running it locally.
-      - name: results on the real manifest (no data in the clone must still pass)
+      # in a clone every listed file is missing: without ALLOW_MISSING the
+      # command must exit 2 and write nothing, and with it the report must
+      # say that no day was analysed. This checks the no-data path, never the
+      # market numbers; those are reproduced by pulling the day with
+      # `make fetch` and running `make results` locally.
+      - name: results on the real manifest without its data
         run: |
           set -o pipefail
-          make results PYTHON=python OUT=/tmp/results-real NBOOT=20 2>&1 | tee -a ci.log
+          {
+            rm -rf /tmp/results-real
+            set +e
+            make results PYTHON=python OUT=/tmp/results-real NBOOT=20
+            rc=$?
+            set -e
+            test "$rc" -ne 0 || { echo "FAIL: results ran without its data files"; exit 1; }
+            test ! -e /tmp/results-real || { echo "FAIL: refused run still wrote output"; exit 1; }
+            make results PYTHON=python OUT=/tmp/results-real NBOOT=20 ALLOW_MISSING=1
+            grep -qF 'No day is analysable yet' /tmp/results-real/README.md \
+              || { echo "FAIL: no-data report missing"; exit 1; }
+            grep -qF 'files missing (24 file(s)' /tmp/results-real/README.md \
+              || { echo "FAIL: missing hours not listed"; exit 1; }
+          } 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
       # On failure, the combined log of every step above is attached to the

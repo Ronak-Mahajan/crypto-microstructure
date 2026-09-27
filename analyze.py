@@ -32,7 +32,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from ofi import report  # noqa: E402
-from ofi.run import DEFAULT_PARAMS, rel_to_root as _rel, run_results  # noqa: E402
+from ofi.run import (DEFAULT_PARAMS, missing_files,  # noqa: E402
+                     rel_to_root as _rel, run_results)
 
 
 def rel_to_root(path) -> str:
@@ -101,6 +102,21 @@ def integrity_problems(results: dict) -> list[str]:
 
 
 def cmd_results(args) -> int:
+    # Refuse before anything is read: a report written without some of the
+    # files its manifest lists would replace the published one with fewer
+    # days, or with days missing hours, and say so only in a footnote.
+    missing = missing_files(Path(args.manifest), args.data_root, ROOT)
+    if missing and not args.allow_missing:
+        print(f"refusing to write {rel_to_root(args.out)}: files the manifest "
+              f"lists are not on disk")
+        for day, keys in missing.items():
+            hours = [Path(k).name[:-len(".jsonl.gz")] for k in keys]
+            more = f" and {len(hours) - 8} more" if len(hours) > 8 else ""
+            print(f"  {day}: {len(keys)} missing ({', '.join(hours[:8])}{more})")
+        print("Fetch them (make fetch DAY=YYYY-MM-DD), or pass --allow-missing "
+              "(ALLOW_MISSING=1) to write a report that lists them as not "
+              "analysed.")
+        return 2
     results = run_results(Path(args.manifest), args.data_root, _params(args),
                           repo_root=ROOT)
     results["command"] = reproducing_command(args)
@@ -154,6 +170,9 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("results", help="run every manifest day, write results/")
     _common(r)
     r.add_argument("--out", default=str(ROOT / "results"))
+    r.add_argument("--allow-missing", action="store_true",
+                   help="write a report even when files the manifest lists "
+                        "are missing (default: exit 2 and write nothing)")
     r.add_argument("--strict", action="store_true",
                    help="write nothing when any file read differs from its "
                         "manifest entry (default: write and flag it)")

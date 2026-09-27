@@ -99,6 +99,31 @@ def days_from_manifest(manifest: dict, manifest_dir: Path, repo_root: Path,
     return dict(groups)
 
 
+def partial_days(manifest: dict) -> dict:
+    """{(exchange, symbol, day): minutes} for days fetched with --minutes < 1440."""
+    out = {}
+    for key, rec in manifest.get("days", {}).items():
+        parts = key.split("/")
+        if len(parts) == 3 and isinstance(rec, dict) and rec.get("partial"):
+            out[tuple(parts)] = rec.get("minutes")
+    return out
+
+
+def missing_files(manifest_path: Path, data_root: Path | None,
+                  repo_root: Path | None = None) -> dict:
+    """{"exchange/symbol/day": [missing keys]} over the days an analysis
+    would read (partial days excluded)."""
+    manifest_path = Path(manifest_path)
+    repo_root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[1]
+    with open(manifest_path, "r", encoding="utf-8") as fh:
+        manifest = json.load(fh)
+    groups = days_from_manifest(manifest, manifest_path.parent, repo_root,
+                                Path(data_root) if data_root else None)
+    partial = partial_days(manifest)
+    return {"/".join(k): g["missing"] for k, g in sorted(groups.items())
+            if g["missing"] and k not in partial}
+
+
 # ---------------------------------------------------------------------------
 # per-day analysis
 # ---------------------------------------------------------------------------
@@ -332,11 +357,21 @@ def run_results(manifest_path: Path, data_root: Path | None, params: dict,
         manifest = json.load(fh)
     groups = days_from_manifest(manifest, manifest_path.parent, repo_root,
                                 Path(data_root) if data_root else None)
-    coin_days = {k: g for k, g in groups.items() if k[0] == "coinbase" and g["files"]}
     results = {"params": p, "manifest": rel_to_root(manifest_path, repo_root),
                "manifest_updated_at": manifest.get("updated_at"),
                "n_manifest_files": len(manifest.get("files", {})),
                "days": [], "pooled": None, "skipped": []}
+    # A partial day (a --minutes smoke pull) would enter the pooled tables
+    # as if it were a day; it is listed instead.
+    partial = partial_days(manifest)
+    for k in sorted(groups):
+        if k in partial:
+            results["skipped"].append({
+                "key": "/".join(k), "missing": [],
+                "reason": f"partial day ({partial[k]} of 1440 minutes fetched)"})
+            log(f"  {'/'.join(k)}: partial day ({partial[k]} min), not analysed")
+    groups = {k: g for k, g in groups.items() if k not in partial}
+    coin_days = {k: g for k, g in groups.items() if k[0] == "coinbase" and g["files"]}
     for k, g in groups.items():
         if k[0] == "coinbase" and not g["files"]:
             results["skipped"].append({"key": "/".join(k), "reason": "files missing",
