@@ -224,3 +224,39 @@ def test_cli_refuses_non_free_day_without_key(monkeypatch):
         tl.main(["fetch", "--day", "2025-08-02"])
     with pytest.raises(SystemExit):
         tl.main(["fetch", "--day", "not-a-day"])
+
+
+# ---------------------------------------------------------------------------
+# reproducible files, content hashes, and what a re-pull does to the manifest
+# ---------------------------------------------------------------------------
+
+def _quiet(*a, **k):
+    return None
+
+
+def _pull(root, lines, level=6, force=False, minutes=10):
+    return tl.fetch_day("coinbase", "BTC-USD", "2025-08-01", tl.DEFAULT_CHANNELS,
+                        root / "data", 10, minutes, None, force, level,
+                        fetch=lambda *a: (lines, 1), log=_quiet)
+
+
+def _verify(mpath):
+    class A:
+        manifest = str(mpath)
+        strict = True
+        quiet = True
+    return tl.cmd_verify(A())
+
+
+def test_the_same_pull_twice_writes_the_same_bytes(tmp_path):
+    lines = _fake_day_lines("2025-08-01")
+    _pull(tmp_path / "a", lines)
+    _pull(tmp_path / "b", lines)
+    rel = Path("data") / "coinbase" / "BTC-USD"
+    names = sorted(p.name for p in (tmp_path / "a" / rel).glob("*.jsonl.gz"))
+    assert len(names) == 3
+    for name in names:
+        a = (tmp_path / "a" / rel / name).read_bytes()
+        b = (tmp_path / "b" / rel / name).read_bytes()
+        assert a[4:8] == b"\x00\x00\x00\x00"          # gzip header mtime
+        assert a == b, name

@@ -113,3 +113,6 @@ def test_writer_thread_roundtrip(tmp_path):
     raw = gzip.open(btc / "20250801-00.jsonl.gz", "rb").read()
     assert b"\r" not in raw
     assert raw.count(b"\n") == 501
+    # and no wall-clock time in the gzip header of any file it wrote
+    for p in tmp_path.rglob("*.jsonl.gz"):
+        assert p.read_bytes()[4:8] == b"\x00\x00\x00\x00", p

@@ -64,6 +64,7 @@ import calendar
 import gzip
 import hashlib
 import http.client
+import io
 import json
 import os
 import re
@@ -227,6 +228,20 @@ def fetch_slice(exchange: str, day: str, offset: int, slice_size: int,
 # Writing
 # ---------------------------------------------------------------------------
 
+def open_gz_text(path: Path, compresslevel: int):
+    """Append-mode text handle on a gzip file with a reproducible header.
+
+    mtime=0 keeps the wall clock out of the gzip header and newline="\\n"
+    keeps os.linesep out of the stream, so the same lines written twice
+    with the same zlib give the same bytes. `gzip.open` takes no mtime,
+    hence the explicit wrapper. Closing the wrapper closes the GzipFile,
+    which closes the file it opened.
+    """
+    return io.TextIOWrapper(
+        gzip.GzipFile(path, "ab", compresslevel=compresslevel, mtime=0),
+        encoding="utf-8", newline="\n")
+
+
 class HourFiles:
     """Hourly gz files inside one directory, appended as lines arrive."""
 
@@ -241,13 +256,7 @@ class HourFiles:
         if hour != self._hour:
             if self._fh is not None:
                 self._fh.close()
-            # newline="\n": the default translates "\n" to os.linesep, so
-            # pulling the same Tardis day on Windows and on Linux produced
-            # files with different bytes and different sha256s. The manifest
-            # is meant to pin the day, not the operating system.
-            self._fh = gzip.open(self.dir / f"{hour}.jsonl.gz", "at",
-                                 encoding="utf-8", newline="\n",
-                                 compresslevel=self.level)
+            self._fh = open_gz_text(self.dir / f"{hour}.jsonl.gz", self.level)
             self._hour = hour
         self._fh.write(text)
         self.lines[hour] = self.lines.get(hour, 0) + 1

@@ -69,6 +69,7 @@ import argparse
 import asyncio
 import calendar
 import gzip
+import io
 import json
 import queue
 import sys
@@ -230,12 +231,15 @@ class GzWriter(threading.Thread):
                 cur[1].close()
             d = self.root / venue / product
             d.mkdir(parents=True, exist_ok=True)
-            # newline="\n": the default (None) translates every "\n" to
-            # os.linesep, so the same recorder wrote CRLF-terminated NDJSON
-            # on Windows and LF on Linux. The manifest's sha256 is supposed
-            # to identify the capture, not the machine that ran it.
-            fh = gzip.open(d / f"{hour}.jsonl.gz", "at", encoding="utf-8",
-                           newline="\n", compresslevel=self.compresslevel)
+            # newline="\n" keeps os.linesep out of the stream and mtime=0
+            # keeps the wall clock out of the gzip header. The periodic
+            # flushes still shape the deflate blocks, which is why the
+            # manifest also pins the decompressed content (content_sha256).
+            # gzip.open takes no mtime, hence the explicit wrapper.
+            fh = io.TextIOWrapper(
+                gzip.GzipFile(d / f"{hour}.jsonl.gz", "ab",
+                              compresslevel=self.compresslevel, mtime=0),
+                encoding="utf-8", newline="\n")
             cur = [hour, fh, 0]
             self._files[key] = cur
         cur[1].write(text)
