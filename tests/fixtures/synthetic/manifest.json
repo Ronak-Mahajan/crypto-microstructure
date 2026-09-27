@@ -4,6 +4,8 @@
   "data/coinbase/BTC-USD/20010101-00.jsonl.gz": {
    "sha256": "e30b57e95f886f3ff1dd65341c3ef40039c5d86eb1b1ea97369bd8f2462d9f27",
    "bytes": 26438,
+   "content_sha256": "ea719660b9087b5c75ba01d6627cfba0b1aa5ed4c09e17bbfdfea9a44d4f51dc",
+   "content_bytes": 197674,
    "source": "synthetic",
    "exchange": "coinbase",
    "symbol": "BTC-USD",
@@ -14,6 +16,8 @@
   "data/hyperliquid/BTC-trades/20010101-00.jsonl.gz": {
    "sha256": "edcfc7a12266129832eb82feb0135cfb49b54700d26d0290e5477f71f099f7ab",
    "bytes": 4853,
+   "content_sha256": "00ad87fdbbbd3047db18945f1c30276bfb4d3e4154b8989626f44ea3800cbfe7",
+   "content_bytes": 34548,
    "source": "synthetic",
    "exchange": "hyperliquid",
    "symbol": "BTC-trades",
@@ -24,6 +28,8 @@
   "data/hyperliquid/BTC-l2Book/20010101-00.jsonl.gz": {
    "sha256": "50ab644708a1b425f70faae4bd89d12355356a7d780491f5ef6dda8f5fde5342",
    "bytes": 34049,
+   "content_sha256": "4f1f8c14c1b4e14bd14255efbdf3627bafa6345b093451f85213c848723b5842",
+   "content_bytes": 1097230,
    "source": "synthetic",
    "exchange": "hyperliquid",
    "symbol": "BTC-l2Book",

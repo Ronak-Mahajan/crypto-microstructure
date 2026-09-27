@@ -39,17 +39,21 @@ test:
 	$(PYTHON) -m pytest -q tests
 
 # One Tardis day. Without an API key only the first of a month is served,
-# which is why DAY must end in -01 unless TARDIS_API_KEY is set.
+# which is why DAY must end in -01 unless TARDIS_API_KEY is set. A day the
+# manifest already records is compared file by file (SAME or CHANGED), and
+# the manifest keeps its entries unless UPDATE_MANIFEST=1.
 #   make fetch DAY=2025-08-01
 #   make fetch DAY=2025-08-01 MINUTES=10        # one-request smoke
 fetch:
 	@test -n "$(DAY)" || (echo "usage: make fetch DAY=YYYY-MM-01 [MINUTES=1440]"; exit 2)
 	$(PYTHON) tardis_loader.py fetch --day $(DAY) --exchange $(EXCHANGE) \
-		--symbol $(SYMBOL) --minutes $(MINUTES) --out $(DATA) --manifest $(MANIFEST)
+		--symbol $(SYMBOL) --minutes $(MINUTES) --out $(DATA) --manifest $(MANIFEST) \
+		$(if $(UPDATE_MANIFEST),--update-manifest)
 
-# sha256 every file the manifest lists. Missing files are reported but do
-# not fail; a CHANGED file does, because a published number would no longer
-# correspond to the bytes on disk.
+# Check every file the manifest lists by its decompressed content hash
+# (the gzip bytes also depend on the zlib build). Missing files are
+# reported but do not fail; a MISMATCH does, because a published number
+# would no longer correspond to the data on disk.
 verify:
 	$(PYTHON) tardis_loader.py verify --manifest $(MANIFEST)
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -125,7 +126,7 @@ def test_manifest_roundtrip_and_verify(tmp_path, monkeypatch):
                          log=lambda *a, **k: None)
     mpath = tmp_path / "manifest.json"
     manifest = tl.load_manifest(mpath)
-    tl.record_day(manifest, stats)
+    tl.record_day(manifest, stats, log=lambda *a, **k: None)
     tl.save_manifest(mpath, manifest)
 
     m = json.loads(mpath.read_text())
@@ -137,6 +138,9 @@ def test_manifest_roundtrip_and_verify(tmp_path, monkeypatch):
     assert entry["lines"] == 4 and entry["hour"] == 0
     assert len(entry["sha256"]) == 64
     assert entry["sha256"] == tl.sha256_of(tmp_path / key)
+    content = gzip.decompress((tmp_path / key).read_bytes())
+    assert entry["content_sha256"] == hashlib.sha256(content).hexdigest()
+    assert entry["content_bytes"] == len(content)
     dk = "coinbase/BTC-USD/2025-08-01"
     assert m["days"][dk]["files"] == sorted(m["days"][dk]["files"])
     assert m["days"][dk]["bytes"] == sum(m["files"][k]["bytes"]
@@ -148,9 +152,17 @@ def test_manifest_roundtrip_and_verify(tmp_path, monkeypatch):
         quiet = True
     assert tl.cmd_verify(A()) == 0
 
-    # corrupt one file -> mismatch -> exit 1
+    # different gzip bytes, same decompressed lines (zero padding after the
+    # last member): the content hash still identifies the file
     with open(tmp_path / key, "ab") as fh:
         fh.write(b"\x00")
+    assert tl.sha256_of(tmp_path / key) != entry["sha256"]
+    assert tl.cmd_verify(A()) == 0
+
+    # different content -> mismatch -> exit 1
+    raw = gzip.decompress((tmp_path / key).read_bytes())
+    (tmp_path / key).write_bytes(gzip.compress(raw.replace(b"1.5", b"1.6"),
+                                               mtime=0))
     assert tl.cmd_verify(A()) == 1
 
     # missing file only fails under --strict
@@ -210,7 +222,6 @@ def test_hash_adds_recorder_files(tmp_path, monkeypatch):
         out = str(tmp_path / "data")
         manifest = str(tmp_path / "manifest.json")
         all = False
-        no_lines = False
     assert tl.cmd_hash(A()) == 0
     m = json.loads((tmp_path / "manifest.json").read_text())
     e = m["files"]["data/coinbase/ETH-USD/20250901-13.jsonl.gz"]
@@ -260,3 +271,110 @@ def test_the_same_pull_twice_writes_the_same_bytes(tmp_path):
         b = (tmp_path / "b" / rel / name).read_bytes()
         assert a[4:8] == b"\x00\x00\x00\x00"          # gzip header mtime
         assert a == b, name
+
+
+def test_a_repull_with_the_same_content_leaves_the_manifest_alone(tmp_path,
+                                                                  monkeypatch):
+    """Same lines, different gzip bytes: SAME, nothing rewritten, verify ok."""
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    lines = _fake_day_lines("2025-08-01")
+    mpath = tmp_path / "manifest.json"
+    m = tl.load_manifest(mpath)
+    res = tl.record_day(m, _pull(tmp_path, lines, level=1), log=_quiet)
+    assert res["written"] and set(res["status"].values()) == {"NEW"}
+    tl.save_manifest(mpath, m)
+    committed = mpath.read_text(encoding="utf-8")
+
+    # a fresh clone: the data is gitignored, so nothing is on disk
+    for p in (tmp_path / "data").rglob("*.jsonl.gz"):
+        p.unlink()
+    m = tl.load_manifest(mpath)
+    res = tl.record_day(m, _pull(tmp_path, lines, level=9), log=_quiet)
+    assert set(res["status"].values()) == {"SAME"}
+    assert not res["changed"] and not res["written"]
+    assert mpath.read_text(encoding="utf-8") == committed
+    key = "data/coinbase/BTC-USD/20250801-00.jsonl.gz"
+    assert tl.sha256_of(tmp_path / key) != json.loads(committed)["files"][key]["sha256"]
+    assert _verify(mpath) == 0                  # passes on content
+
+
+def test_a_repull_with_different_content_is_refused_until_asked(tmp_path,
+                                                                monkeypatch):
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    lines = _fake_day_lines("2025-08-01")
+    mpath = tmp_path / "manifest.json"
+    m = tl.load_manifest(mpath)
+    tl.record_day(m, _pull(tmp_path, lines), log=_quiet)
+    tl.save_manifest(mpath, m)
+    committed = json.loads(mpath.read_text(encoding="utf-8"))
+
+    changed = [l.replace('"price":"1.5"', '"price":"1.6"') for l in lines]
+    m = tl.load_manifest(mpath)
+    printed = []
+    res = tl.record_day(m, _pull(tmp_path, changed, force=True),
+                        log=lambda *a, **k: printed.append(" ".join(map(str, a))))
+    key = "data/coinbase/BTC-USD/20250801-00.jsonl.gz"
+    assert res["status"][key] == "CHANGED"
+    assert res["status"]["data/coinbase/BTC-USD/20250801-01.jsonl.gz"] == "SAME"
+    assert res["changed"] and not res["written"]
+    assert m["files"] == committed["files"] and m["days"] == committed["days"]
+    assert any(p.startswith("  CHANGED") and key in p for p in printed)
+    assert _verify(mpath) == 1                  # disk no longer matches
+
+    m = tl.load_manifest(mpath)
+    res = tl.record_day(m, _pull(tmp_path, changed, force=True), update=True,
+                        log=_quiet)
+    assert res["written"]
+    tl.save_manifest(mpath, m)
+    assert _verify(mpath) == 0
+
+
+def test_an_entry_without_a_content_hash_is_not_silently_replaced(tmp_path,
+                                                                  monkeypatch):
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    lines = _fake_day_lines("2025-08-01")
+    m = tl.load_manifest(tmp_path / "manifest.json")
+    tl.record_day(m, _pull(tmp_path, lines), log=_quiet)
+    for e in m["files"].values():
+        del e["content_sha256"]
+    legacy = json.loads(json.dumps(m))
+    res = tl.record_day(m, _pull(tmp_path, lines, force=True), log=_quiet)
+    assert set(res["status"].values()) == {"UNPINNED"}
+    assert res["changed"] and not res["written"]
+    assert m == legacy
+
+
+def test_fetch_cli_exits_1_and_keeps_the_manifest_on_a_changed_day(tmp_path,
+                                                                   monkeypatch):
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    lines = _fake_day_lines("2025-08-01")
+    feed = {"lines": lines}
+    real = tl.fetch_day
+
+    def fake_fetch_day(*a, **k):
+        return real(*a, fetch=lambda *aa: (feed["lines"], 1), log=_quiet, **k)
+    monkeypatch.setattr(tl, "fetch_day", fake_fetch_day)
+    mpath = tmp_path / "manifest.json"
+    argv = ["fetch", "--day", "2025-08-01", "--minutes", "10",
+            "--out", str(tmp_path / "data"), "--manifest", str(mpath)]
+    assert tl.main(argv) == 0
+    committed = mpath.read_text(encoding="utf-8")
+    assert tl.main(argv + ["--force"]) == 0             # all SAME
+    assert mpath.read_text(encoding="utf-8") == committed
+    feed["lines"] = [l.replace('"price":"1.5"', '"price":"1.6"') for l in lines]
+    assert tl.main(argv + ["--force"]) == 1             # CHANGED, refused
+    assert mpath.read_text(encoding="utf-8") == committed
+    assert tl.main(argv + ["--force", "--update-manifest"]) == 0
+    assert mpath.read_text(encoding="utf-8") != committed
+
+
+def test_content_digest_reads_every_member_and_a_torn_tail(tmp_path):
+    p = tmp_path / "x.jsonl.gz"
+    p.write_bytes(gzip.compress(b"a\nb\n", mtime=0) + gzip.compress(b"c\n", mtime=0))
+    d = tl.content_digest(p)
+    assert d["lines"] == 3 and d["content_bytes"] == 6 and not d["torn"]
+    assert d["content_sha256"] == hashlib.sha256(b"a\nb\nc\n").hexdigest()
+    whole = gzip.compress(b"x" * 5000 + b"\n" + b"y" * 10, mtime=0)
+    p.write_bytes(whole[:-12])              # no end-of-stream marker
+    d = tl.content_digest(p)
+    assert d["torn"]

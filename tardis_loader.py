@@ -42,14 +42,19 @@ responses). The loader streams slice by slice and never holds more than one
 ten-minute slice in memory, but disk is yours to provide. `--minutes 10`
 fetches a single slice as a pipeline smoke test.
 
-Every file written is recorded in manifest.json with its sha256, byte and
-line counts, source ("tardis"), exchange, symbol and day, plus per-day
-message counts by channel and the arrival time of the first snapshot. The
-analysis regenerates its tables from that manifest; `verify` recomputes the
-hashes so a result can be tied to the exact bytes that produced it.
+Every file written is recorded in manifest.json with the sha256 and size of
+the gzip file, the sha256 and size of its decompressed content, its line
+count, source ("tardis"), exchange, symbol and day, plus per-day message
+counts by channel and the arrival time of the first snapshot. The content
+hash is the file's identity: it depends only on the lines, while the gzip
+bytes also depend on the zlib build. `verify` checks it, and `fetch` compares
+a pull with the manifest's entries for that day and prints NEW, SAME or
+CHANGED per file; it changes an existing day's entries only when given
+--update-manifest.
 
     python tardis_loader.py fetch --day 2025-08-01            # one free day
-    python tardis_loader.py fetch --day 2025-08-01 --minutes 10  # smoke test
+    python tardis_loader.py fetch --day 2025-08-01 --minutes 10 \\
+        --out data-smoke --manifest data-smoke/manifest.json  # smoke test
     python tardis_loader.py hash                              # add recorder files
     python tardis_loader.py verify                            # check hashes
 
@@ -276,15 +281,30 @@ def sha256_of(path: Path) -> str:
     return h.hexdigest()
 
 
-def count_lines_gz(path: Path) -> int:
-    n = 0
+def content_digest(path: Path) -> dict:
+    """sha256, size and line count of a gzip file's decompressed stream.
+
+    Reads every gzip member to the end. A file whose last member has no
+    end-of-stream marker (the recorder is still writing it) is hashed up to
+    the tear and reported with torn=True.
+    """
+    h = hashlib.sha256()
+    n_bytes = n_lines = 0
+    last = b"\n"
+    torn = False
     try:
         with gzip.open(path, "rb") as fh:
-            for _ in fh:
-                n += 1
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+                n_bytes += len(chunk)
+                n_lines += chunk.count(b"\n")
+                last = chunk[-1:]
     except EOFError:
-        pass                     # torn tail from a live recorder; count what read
-    return n
+        torn = True
+    if n_bytes and last != b"\n":
+        n_lines += 1                           # a final line with no newline
+    return {"content_sha256": h.hexdigest(), "content_bytes": n_bytes,
+            "lines": n_lines, "torn": torn}
 
 
 def rel_key(path: Path) -> str:
@@ -325,15 +345,27 @@ def save_manifest(path: Path, m: dict) -> None:
 
 
 def file_entry(path: Path, source: str, exchange: str, symbol: str,
-               day: str, lines: int | None) -> dict:
+               day: str, lines: int | None = None) -> dict:
+    """Manifest entry for one data file.
+
+    `lines`, when given, is how many lines the writer wrote; the file must
+    hold exactly that many or the entry is refused.
+    """
     st = path.stat()
+    dig = content_digest(path)
+    if lines is not None and lines != dig["lines"]:
+        raise ValueError(f"{path}: {lines} lines written but "
+                         f"{dig['lines']} read back")
     entry = {
         "sha256": sha256_of(path), "bytes": st.st_size,
+        "content_sha256": dig["content_sha256"],
+        "content_bytes": dig["content_bytes"],
         "source": source, "exchange": exchange, "symbol": symbol, "day": day,
         "hour": int(path.name[9:11]) if len(path.name) > 11 else None,
+        "lines": dig["lines"],
     }
-    if lines is not None:
-        entry["lines"] = lines
+    if dig["torn"]:
+        entry["torn"] = True
     return entry
 
 
@@ -429,21 +461,76 @@ def fetch_day(exchange: str, symbol: str, day: str, channels: tuple,
     }
 
 
-def record_day(manifest: dict, stats: dict) -> None:
+def _day_keys(manifest: dict, exchange: str, symbol: str, day: str) -> set:
+    return {k for k, e in manifest["files"].items()
+            if (e.get("exchange"), e.get("symbol"), e.get("day"))
+            == (exchange, symbol, day)}
+
+
+def record_day(manifest: dict, stats: dict, update: bool = False,
+               log=print) -> dict:
+    """Compare one pulled day with the manifest, and record it if allowed.
+
+    Every pulled file is compared by content_sha256 with the manifest entry
+    under the same key and labelled
+
+        NEW        no entry yet
+        SAME       same decompressed content (the gzip bytes may differ)
+        CHANGED    different content
+        UNPINNED   the entry has no content_sha256 to compare against
+        ABSENT     listed for this day, but this pull did not produce it
+
+    A day the manifest does not know is written as pulled. A day whose files
+    are all SAME leaves the manifest exactly as it was. Anything else is a
+    change to a recorded day: the manifest is left untouched unless
+    `update` is set, in which case this pull replaces the day's entries
+    (ABSENT ones are dropped) and its `days` record.
+
+    Returns {"status": {key: label}, "changed": bool, "written": bool}.
+    """
     files = stats.pop("files")
-    keys = []
-    total = 0
+    ex, sym, day = stats["exchange"], stats["symbol"], stats["day"]
+    day_key = f"{ex}/{sym}/{day}"
+    entries = {}
     for path, lines in files:
-        key = rel_key(path)
-        entry = file_entry(path, "tardis", stats["exchange"], stats["symbol"],
-                           stats["day"], lines)
-        manifest["files"][key] = entry
-        total += entry["bytes"]
-        keys.append(key)
-    stats["bytes"] = total
-    stats["files"] = keys
-    day_key = f"{stats['exchange']}/{stats['symbol']}/{stats['day']}"
-    manifest["days"][day_key] = stats
+        entries[rel_key(path)] = file_entry(path, "tardis", ex, sym, day, lines)
+    stats["bytes"] = sum(e["bytes"] for e in entries.values())
+    stats["content_bytes"] = sum(e["content_bytes"] for e in entries.values())
+    stats["files"] = sorted(entries)
+
+    old_keys = _day_keys(manifest, ex, sym, day)
+    status = {}
+    for key, entry in entries.items():
+        old = manifest["files"].get(key)
+        if old is None:
+            status[key] = "NEW"
+        elif not old.get("content_sha256"):
+            status[key] = "UNPINNED"
+        elif old["content_sha256"] == entry["content_sha256"]:
+            status[key] = "SAME"
+        else:
+            status[key] = "CHANGED"
+    for key in old_keys - set(entries):
+        status[key] = "ABSENT"
+
+    fresh = not old_keys and day_key not in manifest["days"]
+    unchanged = bool(status) and all(s == "SAME" for s in status.values())
+    changed = not fresh and not unchanged
+    for key in sorted(status):
+        log(f"  {status[key]:<8} {key}", flush=True)
+    counts: dict[str, int] = {}
+    for s in status.values():
+        counts[s] = counts.get(s, 0) + 1
+    log(f"manifest {day_key}: "
+        + ", ".join(f"{n} {s}" for s, n in sorted(counts.items())), flush=True)
+
+    written = fresh or (changed and update)
+    if written:
+        for key in old_keys:
+            del manifest["files"][key]
+        manifest["files"].update(entries)
+        manifest["days"][day_key] = stats
+    return {"status": status, "changed": changed, "written": written}
 
 
 def cmd_fetch(args) -> int:
@@ -460,6 +547,8 @@ def cmd_fetch(args) -> int:
     channels = tuple(c.strip() for c in args.channels.split(",") if c.strip())
     out_root = Path(args.out)
     manifest_path = Path(args.manifest)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    rc = 0
     for d in days:
         print(f"fetching {args.exchange} {args.symbol} {d} "
               f"channels={','.join(channels)} -> {out_root}", flush=True)
@@ -467,8 +556,18 @@ def cmd_fetch(args) -> int:
                           args.slice_size, args.minutes, api_key, args.force,
                           args.compresslevel)
         manifest = load_manifest(manifest_path)
-        record_day(manifest, stats)
-        save_manifest(manifest_path, manifest)
+        res = record_day(manifest, stats, update=args.update_manifest)
+        if res["written"]:
+            save_manifest(manifest_path, manifest)
+        elif res["changed"]:
+            rc = 1
+            print(f"{manifest_path} already records {d} differently and was "
+                  f"left as it is, so `verify` now reports the difference. "
+                  f"Pass --update-manifest to record this pull instead.",
+                  flush=True)
+        else:
+            print(f"{manifest_path} unchanged: every file of {d} has the "
+                  f"content it records", flush=True)
         print(f"done {d}: {stats['lines']:,} lines, "
               f"{stats['bytes'] / 1e6:,.0f} MB on disk in {len(stats['files'])} "
               f"files, messages={stats['messages']}, "
@@ -478,7 +577,7 @@ def cmd_fetch(args) -> int:
         if stats["first_snapshot_t_ns"] is None:
             print("WARNING: no snapshot message in this day; the book cannot "
                   "be initialised from it", flush=True)
-    return 0
+    return rc
 
 
 # ---------------------------------------------------------------------------
@@ -500,9 +599,7 @@ def cmd_hash(args) -> int:
         day = f"{name[0:4]}-{name[4:6]}-{name[6:8]}" if len(name) >= 11 else "?"
         prev = manifest["files"].get(key, {})
         source = prev.get("source", "recorder")
-        lines = None if args.no_lines else count_lines_gz(path)
-        manifest["files"][key] = file_entry(path, source, exchange, symbol,
-                                            day, lines)
+        manifest["files"][key] = file_entry(path, source, exchange, symbol, day)
         added += 1
         print(f"  {key}  {manifest['files'][key]['bytes']:,} B", flush=True)
     save_manifest(manifest_path, manifest)
@@ -531,9 +628,16 @@ def resolve_key(key: str, manifest_dir: Path) -> Path | None:
 
 
 def cmd_verify(args) -> int:
+    """Check every file the manifest lists against its entry.
+
+    A file passes when its gzip sha256 matches, or, when only the gzip bytes
+    differ, when the sha256 of its decompressed content matches the entry's
+    content_sha256 (a re-pull compressed by a different zlib). An entry
+    without content_sha256 can only pass on the gzip hash.
+    """
     manifest_path = Path(args.manifest)
     manifest = load_manifest(manifest_path)
-    ok = bad = missing = 0
+    ok = by_content = bad = missing = 0
     for key, entry in manifest["files"].items():
         path = resolve_key(key, manifest_path.parent)
         if path is None:
@@ -544,11 +648,28 @@ def cmd_verify(args) -> int:
         digest = sha256_of(path)
         if digest == entry.get("sha256"):
             ok += 1
-        else:
+            continue
+        want = entry.get("content_sha256")
+        if not want:
             bad += 1
             print(f"MISMATCH {key}: manifest {entry.get('sha256')} "
-                  f"disk {digest}", flush=True)
-    print(f"verify: {ok} ok, {bad} mismatched, {missing} missing "
+                  f"disk {digest} (no content_sha256 to compare)", flush=True)
+            continue
+        got = content_digest(path)
+        if got["content_sha256"] == want:
+            ok += 1
+            by_content += 1
+            if not args.quiet:
+                print(f"ok {key}: content matches, gzip bytes differ "
+                      f"(manifest {entry.get('sha256', '')[:12]}, "
+                      f"disk {digest[:12]})", flush=True)
+            continue
+        bad += 1
+        print(f"MISMATCH {key}: content sha256 manifest {want} "
+              f"disk {got['content_sha256']}, lines manifest "
+              f"{entry.get('lines')} disk {got['lines']}", flush=True)
+    print(f"verify: {ok} ok ({by_content} on decompressed content only), "
+          f"{bad} mismatched, {missing} missing "
           f"(of {len(manifest['files'])})", flush=True)
     if bad:
         return 1
@@ -585,17 +706,18 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--compresslevel", type=int, default=6)
     f.add_argument("--force", action="store_true",
                    help="overwrite files for a day that already exists")
+    f.add_argument("--update-manifest", action="store_true",
+                   help="record this pull even when the manifest already "
+                        "records the day with different content")
     f.set_defaults(func=cmd_fetch)
 
     h = sub.add_parser("hash", help="add recorder-written files to the manifest")
     h.add_argument("--out", default=str(DATA))
     h.add_argument("--manifest", default=str(MANIFEST))
     h.add_argument("--all", action="store_true", help="re-hash known files too")
-    h.add_argument("--no-lines", action="store_true",
-                   help="skip line counts (faster on large files)")
     h.set_defaults(func=cmd_hash)
 
-    v = sub.add_parser("verify", help="recompute sha256 for every manifest file")
+    v = sub.add_parser("verify", help="check every manifest file's hashes")
     v.add_argument("--manifest", default=str(MANIFEST))
     v.add_argument("--strict", action="store_true",
                    help="missing files fail too (default: only mismatches)")

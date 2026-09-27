@@ -52,6 +52,8 @@ def test_manifest_hashes_still_match_the_committed_bytes():
         p = MANIFEST.parent / key
         assert p.exists(), key
         assert tl.sha256_of(p) == entry["sha256"], key
+        assert tl.content_digest(p)["content_sha256"] == \
+            entry["content_sha256"], key
         assert entry["source"] == "synthetic"
         assert entry["day"] == DAY
 
