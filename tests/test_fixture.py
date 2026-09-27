@@ -215,6 +215,34 @@ def test_missing_files_are_listed_rather_than_silently_skipped(tmp_path):
                for s in res["skipped"])
 
 
+def test_a_control_directory_is_not_a_product_day(tmp_path):
+    """data/coinbase/_control/ (subscription confirmations) stays out of it."""
+    import shutil
+    import tardis_loader as tl
+    src = DATA / "coinbase" / "BTC-USD" / "20010101-00.jsonl.gz"
+    btc = tmp_path / "data" / "coinbase" / "BTC-USD"
+    ctl = tmp_path / "data" / "coinbase" / "_control"
+    btc.mkdir(parents=True)
+    ctl.mkdir(parents=True)
+    shutil.copy(src, btc / src.name)
+    from ofi.io import write_lines
+    write_lines(ctl / "20010101-00.jsonl.gz",
+                ['{"t_ns":1,"m":{"type":"subscriptions","channels":[]}}'])
+    m = {"schema": 1, "days": {}, "files": {}}
+    for d, sym in ((btc, "BTC-USD"), (ctl, "_control")):
+        p = d / "20010101-00.jsonl.gz"
+        m["files"][f"data/coinbase/{sym}/{p.name}"] = tl.file_entry(
+            p, "recorder", "coinbase", sym, DAY)
+    mp = tmp_path / "manifest.json"
+    mp.write_text(json.dumps(m), encoding="utf-8")
+    res = run_results(mp, None, {"n_folds": 2, "n_boot": 10, "horizons_s": [1]},
+                      log=lambda *a, **k: None)
+    assert [d["key"] for d in res["days"]] == [f"coinbase/BTC-USD/{DAY}"]
+    assert not any("_control" in s["key"] for s in res["skipped"])
+    md, _ = report.write(res, tmp_path / "out")
+    assert "coinbase/_control" not in md.read_text(encoding="utf-8")
+
+
 def test_iter_files_reads_the_marker_line():
     kinds = [e[0] for e in iter_files(
         [DATA / "coinbase" / "BTC-USD" / "20010101-00.jsonl.gz"])]

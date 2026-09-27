@@ -77,11 +77,16 @@ def resolve_path(key: str, manifest_dir: Path, repo_root: Path,
 
 def days_from_manifest(manifest: dict, manifest_dir: Path, repo_root: Path,
                        data_root: Path | None) -> dict:
-    """{(exchange, symbol, day): {"files": [(key, path, entry)], ...}}"""
+    """{(exchange, symbol, day): {"files": [(key, path, entry)], ...}}
+
+    Symbols starting with "_" are not products: the recorder writes venue
+    control frames to data/coinbase/_control/, and a manifest that lists
+    them must not grow a coinbase/_control product-day.
+    """
     groups: dict = defaultdict(lambda: {"files": [], "missing": []})
     for key, entry in sorted(manifest.get("files", {}).items()):
         ex, sym, day = entry.get("exchange"), entry.get("symbol"), entry.get("day")
-        if not (ex and sym and day):
+        if not (ex and sym and day) or sym.startswith("_"):
             continue
         p = resolve_path(key, manifest_dir, repo_root, data_root)
         g = groups[(ex, sym, day)]

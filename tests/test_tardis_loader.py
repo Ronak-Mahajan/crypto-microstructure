@@ -405,6 +405,23 @@ def test_force_refetch_replaces_the_whole_day(tmp_path, monkeypatch):
     assert _verify(mpath) == 0
 
 
+def test_hash_skips_control_directories(tmp_path, monkeypatch):
+    monkeypatch.setattr(tl, "ROOT", tmp_path)
+    for product in ("ETH-USD", "_control"):
+        d = tmp_path / "data" / "coinbase" / product
+        d.mkdir(parents=True)
+        with gzip.open(d / "20250901-13.jsonl.gz", "wt") as fh:
+            fh.write('{"t_ns":1,"m":{"type":"subscriptions"}}\n')
+
+    class A:
+        out = str(tmp_path / "data")
+        manifest = str(tmp_path / "manifest.json")
+        all = True
+    assert tl.cmd_hash(A()) == 0
+    m = json.loads((tmp_path / "manifest.json").read_text())
+    assert list(m["files"]) == ["data/coinbase/ETH-USD/20250901-13.jsonl.gz"]
+
+
 def test_content_digest_reads_every_member_and_a_torn_tail(tmp_path):
     p = tmp_path / "x.jsonl.gz"
     p.write_bytes(gzip.compress(b"a\nb\n", mtime=0) + gzip.compress(b"c\n", mtime=0))

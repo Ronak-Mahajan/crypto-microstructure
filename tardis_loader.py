@@ -602,12 +602,21 @@ def cmd_fetch(args) -> int:
 # ---------------------------------------------------------------------------
 
 def cmd_hash(args) -> int:
-    """Add every data/<venue>/<product>/*.jsonl.gz not yet in the manifest."""
+    """Add every data/<venue>/<product>/*.jsonl.gz not yet in the manifest.
+
+    Directories whose name starts with "_" are skipped: the recorder routes
+    venue control frames (Coinbase subscription confirmations, errors) to
+    data/coinbase/_control/, which is not a product and must not become a
+    product-day in the report.
+    """
     out_root = Path(args.out)
     manifest_path = Path(args.manifest)
     manifest = load_manifest(manifest_path)
-    added = 0
+    added = control = 0
     for path in sorted(out_root.glob("*/*/*.jsonl.gz")):
+        if path.parent.name.startswith("_"):
+            control += 1
+            continue
         key = rel_key(path)
         if key in manifest["files"] and not args.all:
             continue
@@ -621,6 +630,9 @@ def cmd_hash(args) -> int:
         print(f"  {key}  {manifest['files'][key]['bytes']:,} B", flush=True)
     save_manifest(manifest_path, manifest)
     print(f"{added} file(s) hashed into {manifest_path}", flush=True)
+    if control:
+        print(f"{control} file(s) under _-prefixed directories (venue control "
+              f"messages) not added", flush=True)
     return 0
 
 
