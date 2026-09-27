@@ -10,19 +10,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # full history: the failure-log step below rebases onto the branch, and
-      # a depth-1 checkout has no merge base to rebase onto once CI has
-      # already written one log back.
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-python@v5
         with:
@@ -65,9 +62,8 @@ jobs:
       # no network, a couple of seconds, and it must write a real (tiny)
       # table. This is what stops book/features/bars/inference/report from
       # silently ceasing to produce results while the unit tests stay green.
-      # OUT is a scratch directory, never the committed results/self-test:
-      # regenerating a tracked file here would leave the tree dirty and the
-      # failure-log step below could not rebase.
+      # OUT is a scratch directory, never the committed results/self-test, so
+      # CI never rewrites a tracked file.
       - name: pipeline smoke over the synthetic fixture
         run: |
           set -o pipefail
@@ -118,20 +114,13 @@ jobs:
           make results PYTHON=python OUT=/tmp/results-real NBOOT=20 2>&1 | tee -a ci.log
           exit ${PIPESTATUS[0]}
 
-      # Push events only: on a pull_request, GITHUB_REF_NAME is "<n>/merge",
-      # which is not a branch anyone can push to, so this step would fail a
-      # second time and bury the real failure under a git error.
-      - name: save failure log
-        if: failure() && github.event_name == 'push' && github.ref != 'refs/heads/main'
-        run: |
-          mkdir -p .ci
-          tail -c 60000 ci.log > .ci/last-failure-test.log || true
-          git config user.name "ci-bot"
-          git config user.email "ci-bot@users.noreply.github.com"
-          git add .ci/last-failure-test.log
-          git commit -m "ci: failure log [skip ci]" || exit 0
-          # a half-finished step may have left tracked files modified; the
-          # rebase below refuses to run with a dirty tree
-          git checkout -- . || true
-          git pull --rebase origin "$GITHUB_REF_NAME"
-          git push origin "HEAD:$GITHUB_REF_NAME"
+      # On failure, the combined log of every step above is attached to the
+      # run as the ci-log artifact.
+      - name: upload failure log
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ci-log
+          path: ci.log
+          retention-days: 7
+          overwrite: true
