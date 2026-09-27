@@ -68,7 +68,7 @@ record:
 # analysable yet -- that is the honest state until the owner pulls days.
 results:
 	$(PYTHON) analyze.py results --manifest $(MANIFEST) --out $(OUT) \
-		--folds $(FOLDS) --n-boot $(NBOOT)
+		--folds $(FOLDS) --n-boot $(NBOOT) $(if $(STRICT),--strict)
 
 # The same pipeline over the committed synthetic fixture: no network, about
 # a second, and it produces a real (tiny) table. Not a market result.

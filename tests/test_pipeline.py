@@ -285,3 +285,48 @@ def test_torn_and_malformed_lines_are_skipped(tmp_path):
                     json.dumps({"t_ns": 1, "m": None}), ""])
     evs = list(iter_file(p))
     assert len(evs) == 1 and evs[0][0] == "msg"
+
+
+def test_dropped_lines_are_counted_by_reason(tmp_path):
+    """Nothing is dropped silently: every line the reader cannot use is
+    counted under its reason, and a final line with no newline that does
+    not parse (a hard stop mid-write) is told apart from a bad line in the
+    middle of the file."""
+    import gzip
+    import hashlib
+    import json
+    from ofi.io import new_tally
+    good = json.dumps({"t_ns": 0, "m": BASE_SNAP})
+    body = "\n".join([good, "{not json", json.dumps({"m": {}}),
+                      json.dumps({"t_ns": "x", "m": {}}),
+                      json.dumps({"t_ns": 1, "m": None}),
+                      json.dumps({"t_ns": 2, "m": [1]}), "[1]", "",
+                      json.dumps({"t_ns": 3, "marker": "disconnect", "m": None}),
+                      '{"t_ns": 4, "m": {"ty']).encode()
+    p = tmp_path / "20010101-02.jsonl.gz"
+    p.write_bytes(gzip.compress(body, mtime=0))
+    t = new_tally()
+    evs = list(iter_file(p, t))
+    assert [e[0] for e in evs] == ["msg", "marker"]
+    assert t["complete"] and not t["torn"]
+    assert t["lines"] == 10
+    assert {k: v for k, v in t["dropped"].items() if v} == {
+        "bad_json": 1, "no_t_ns": 1, "t_ns_not_int": 1, "m_null_no_marker": 1,
+        "m_not_object": 1, "not_object": 1, "blank": 1, "torn_tail": 1}
+    # the hashes are of the bytes actually read
+    assert t["content_sha256"] == hashlib.sha256(body).hexdigest()
+    assert t["content_bytes"] == len(body)
+    assert t["sha256"] == hashlib.sha256(p.read_bytes()).hexdigest()
+    assert t["bytes"] == p.stat().st_size
+
+
+def test_a_file_read_only_in_part_is_not_complete(tmp_path):
+    from ofi.io import new_tally
+    import json
+    p = tmp_path / "20010101-03.jsonl.gz"
+    write_lines(p, [json.dumps({"t_ns": i, "m": {"type": "x"}}) for i in range(5)])
+    t = new_tally()
+    it = iter_file(p, t)
+    next(it)
+    it.close()
+    assert not t["complete"]

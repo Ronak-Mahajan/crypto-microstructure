@@ -248,3 +248,80 @@ def test_iter_files_reads_the_marker_line():
         [DATA / "coinbase" / "BTC-USD" / "20010101-00.jsonl.gz"])]
     assert kinds.count("marker") >= 3        # connect, disconnect, connect
     assert kinds.count("msg") > 1000
+
+
+# ---------------------------------------------------------------------------
+# integrity of the bytes the analysis reads
+# ---------------------------------------------------------------------------
+
+SMALL = {"n_folds": 2, "n_boot": 10, "horizons_s": [1]}
+
+
+def _fixture_copy(tmp_path):
+    """The fixture data and manifest, copied so a test may damage them."""
+    import shutil
+    shutil.copytree(DATA, tmp_path / "data")
+    mp = tmp_path / "manifest.json"
+    shutil.copy(MANIFEST, mp)
+    return mp
+
+
+def test_the_report_states_what_was_read(tmp_path):
+    res = run_results(MANIFEST, None, SMALL, log=lambda *a, **k: None)
+    d = res["days"][0]
+    assert d["integrity"]["clean"] and d["integrity"]["ok"] == 1
+    assert d["files"][0]["status"] == "ok"
+    assert d["files"][0]["read_content_sha256"] == d["files"][0]["content_sha256"]
+    assert d["stats"]["n_dropped_lines"] == 0
+    assert d["stats"]["n_lines_read"] == 1156
+    text = report.build_markdown(res)
+    assert (f"- coinbase/BTC-USD/{DAY}: 1 of 1 listed files read; "
+            "decompressed-content sha256 matches the manifest on 1 of 1; "
+            "0 lines dropped.") in text
+    assert "Integrity problem" not in text
+    assert "Not analysed" not in text
+
+
+def test_changed_bytes_are_flagged_and_strict_refuses(tmp_path):
+    """Same file name, same manifest entry, different content."""
+    import gzip
+    import analyze
+    mp = _fixture_copy(tmp_path)
+    f = tmp_path / "data" / "coinbase" / "BTC-USD" / "20010101-00.jsonl.gz"
+    lines = gzip.decompress(f.read_bytes()).splitlines(keepends=True)
+    f.write_bytes(gzip.compress(b"".join(lines[:578]), mtime=0))
+
+    res = run_results(mp, None, SMALL, log=lambda *a, **k: None)
+    d = res["days"][0]
+    assert not d["integrity"]["clean"]
+    assert d["files"][0]["status"] == "content differs"
+    assert d["files"][0]["lines"] == 578 and d["files"][0]["lines_listed"] == 1156
+    assert d["files"][0]["read_content_sha256"] != d["files"][0]["content_sha256"]
+    text = report.build_markdown(res)
+    assert (f"- **Integrity problem.** coinbase/BTC-USD/{DAY}: 1 of 1 listed "
+            "files read; decompressed-content sha256 matches the manifest on "
+            "0 of 1; 20010101-00 content differs (578 lines read, 1,156 "
+            "listed); 0 lines dropped.") in text
+
+    argv = ["results", "--manifest", str(mp), "--folds", "2", "--n-boot", "10",
+            "--horizons", "1"]
+    out = tmp_path / "out"
+    assert analyze.main(argv + ["--out", str(out), "--strict"]) == 2
+    assert not out.exists()
+    assert analyze.main(argv + ["--out", str(out)]) == 0
+    assert "Integrity problem" in (out / "README.md").read_text(encoding="utf-8")
+
+
+def test_a_skipped_day_is_listed_next_to_an_analysed_one(tmp_path):
+    m = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    m["files"]["data/coinbase/BTC-USD/29991231-23.jsonl.gz"] = {
+        "sha256": "0" * 64, "bytes": 0, "source": "tardis",
+        "exchange": "coinbase", "symbol": "BTC-USD", "day": "2999-12-31"}
+    mp = tmp_path / "manifest.json"
+    mp.write_text(json.dumps(m), encoding="utf-8")
+    res = run_results(mp, MANIFEST.parent / "data", SMALL,
+                      log=lambda *a, **k: None)
+    assert [d["key"] for d in res["days"]] == [f"coinbase/BTC-USD/{DAY}"]
+    text = report.build_markdown(res)
+    assert ("Not analysed:\n\n- coinbase/BTC-USD/2999-12-31: files missing "
+            "(1 file(s): 29991231-23)") in text

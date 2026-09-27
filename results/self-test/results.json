@@ -35,10 +35,25 @@
     {
      "path": "data/coinbase/BTC-USD/20010101-00.jsonl.gz",
      "sha256": "e30b57e95f88",
-     "bytes": 26438
+     "bytes": 26438,
+     "content_sha256": "ea719660b908",
+     "read_sha256": "e30b57e95f88",
+     "read_content_sha256": "ea719660b908",
+     "lines": 1156,
+     "lines_listed": 1156,
+     "status": "ok"
     }
    ],
    "missing": [],
+   "integrity": {
+    "read": 1,
+    "ok": 1,
+    "pinned_by": "content_sha256",
+    "problems": [],
+    "listed": 1,
+    "missing": [],
+    "clean": true
+   },
    "stats": {
     "n_msgs": 1153,
     "n_snapshots": 9,
@@ -63,7 +78,19 @@
     "n_checks_clean": 7,
     "mismatch_rate_gap_mean": 1.0,
     "mismatch_rate_gap_max": 1.0,
-    "n_checks_gap": 1
+    "n_checks_gap": 1,
+    "dropped_lines": {
+     "torn_tail": 0,
+     "bad_json": 0,
+     "not_object": 0,
+     "no_t_ns": 0,
+     "t_ns_not_int": 0,
+     "m_null_no_marker": 0,
+     "m_not_object": 0,
+     "blank": 0
+    },
+    "n_dropped_lines": 0,
+    "n_lines_read": 1156
    },
    "snapshot_checks": [
     {

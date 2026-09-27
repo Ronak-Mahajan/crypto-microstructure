@@ -91,12 +91,32 @@ def reproducing_command(args) -> str:
     return f"python analyze.py results --manifest {rel}"
 
 
+def integrity_problems(results: dict) -> list[str]:
+    """Files whose bytes, as read, differ from their manifest entry."""
+    out = []
+    for d in results["days"]:
+        for pr in (d.get("integrity") or {}).get("problems", []):
+            out.append(f"{d['key']} {pr['file']}: {pr['status']}")
+    return out
+
+
 def cmd_results(args) -> int:
     results = run_results(Path(args.manifest), args.data_root, _params(args),
                           repo_root=ROOT)
     results["command"] = reproducing_command(args)
+    problems = integrity_problems(results)
+    for p in problems:
+        print(f"WARNING {p}")
+    if problems and args.strict:
+        print(f"--strict: {len(problems)} file(s) differ from the manifest; "
+              f"nothing written to {args.out}. `python tardis_loader.py "
+              f"verify` shows the same difference.")
+        return 2
     md, js = report.write(results, Path(args.out))
     print(f"wrote {md} and {js}")
+    if problems:
+        print(f"{len(problems)} file(s) differ from the manifest; the report "
+              f"flags them under its Data table")
     if not results["days"]:
         print("no analysable day in the manifest; the report says so")
     return 0
@@ -134,6 +154,9 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("results", help="run every manifest day, write results/")
     _common(r)
     r.add_argument("--out", default=str(ROOT / "results"))
+    r.add_argument("--strict", action="store_true",
+                   help="write nothing when any file read differs from its "
+                        "manifest entry (default: write and flag it)")
     r.set_defaults(fn=cmd_results)
     d = sub.add_parser("day", help="analyse one day and print its tables")
     _common(d)

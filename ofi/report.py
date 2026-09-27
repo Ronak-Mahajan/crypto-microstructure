@@ -16,7 +16,7 @@ import numpy as np
 
 from . import fees
 from .run import (BOOK_LL_DT_S, CKS_AGG_S, FEATURES, FEATURE_LABEL,
-                  TRADE_LL_DT_S, jsonable)
+                  TRADE_LL_DT_S, hour_of, jsonable)
 
 
 def f(x, nd=3, pct=False) -> str:
@@ -103,6 +103,49 @@ def provenance_banner(results: dict) -> str | None:
     return None
 
 
+def _list(names: list, limit: int = 8) -> str:
+    shown = ", ".join(names[:limit])
+    return shown + (f" and {len(names) - limit} more" if len(names) > limit else "")
+
+
+_PINNED = {"content_sha256": "decompressed-content sha256",
+           "sha256": "gzip sha256"}
+
+
+def integrity_line(d: dict) -> str | None:
+    """One line per analysed day: what was read, measured against the manifest."""
+    it = d.get("integrity")
+    if not it:
+        return None
+    s = d["stats"]
+    parts = [f"{it['read']} of {it['listed']} listed files read"]
+    if it["missing"]:
+        parts.append(f"missing {_list(it['missing'])}")
+    parts.append(f"{_PINNED.get(it.get('pinned_by'), 'sha256')} matches the "
+                 f"manifest on {it['ok']} of {it['read']}")
+    for pr in it["problems"]:
+        listed = pr.get("lines_listed")
+        listed = f"{listed:,}" if isinstance(listed, int) else "n/a"
+        parts.append(f"{pr['file']} {pr['status']} "
+                     f"({pr['lines']:,} lines read, {listed} listed)")
+    n = s.get("n_dropped_lines", 0)
+    if n:
+        by = ", ".join(f"{k} {v:,}" for k, v in s["dropped_lines"].items() if v)
+        parts.append(f"{n:,} lines dropped ({by})")
+    else:
+        parts.append("0 lines dropped")
+    flag = "" if it.get("clean") else "**Integrity problem.** "
+    return f"- {flag}{d['key']}: " + "; ".join(parts) + "."
+
+
+def skipped_line(sk: dict) -> str:
+    missing = sk.get("missing") or []
+    tail = ""
+    if missing:
+        tail = f" ({len(missing)} file(s): {_list([hour_of(k) for k in missing])})"
+    return f"- {sk['key']}: {sk['reason']}{tail}"
+
+
 def build_markdown(results: dict) -> str:
     p = results["params"]
     days = results["days"]
@@ -132,16 +175,19 @@ def build_markdown(results: dict) -> str:
                  "`python tardis_loader.py hash`, then rerun `make results`.")
         if results.get("skipped"):
             L.append("")
-            for s in results["skipped"]:
-                L.append(f"- skipped {s['key']}: {s['reason']} ({len(s['missing'])} file(s))")
+            L.append("Not analysed:")
+            L.append("")
+            for sk in results["skipped"]:
+                L.append(skipped_line(sk))
         return "\n".join(L) + "\n"
 
     # ---- data ---------------------------------------------------------
     L.append("## Data")
     L.append("")
     L.append("| day | source | files | messages | snapshots | disconnects | bars | segments | "
-             "book time | span | snapshot checks, no gap (max mismatch) | checks after a gap | crossed |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+             "book time | span | snapshot checks, no gap (max mismatch) | checks after a gap | crossed | "
+             "dropped lines |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for d in days:
         s = d["stats"]
         clean = (f"{s.get('n_checks_clean', 0)}: "
@@ -153,14 +199,29 @@ def build_markdown(results: dict) -> str:
         L.append(f"| {d['key']} | {','.join(d['sources'])} | {len(d['files'])} | "
                  f"{s['n_msgs']:,} | {s['n_snapshots']} | {s['n_disconnects']} | "
                  f"{s['bars']:,} | {s['segments']} | {hrs(s['covered_s'])} | "
-                 f"{hrs(s['span_s'])} | {clean} | {gap_txt} | {s['n_crossed']} |")
+                 f"{hrs(s['span_s'])} | {clean} | {gap_txt} | {s['n_crossed']} | "
+                 f"{s.get('n_dropped_lines', 0):,} |")
     L.append("")
     L.append("Snapshot checks compare the diff-rebuilt book with every resent snapshot. "
              "A check with no preceding disconnect is a pure test of the diff replay and "
              "must be 0%; a check straight after a gap measures the gap as much as the "
              "rebuild, so the two are counted separately. `crossed` counts messages "
-             "after which bid >= ask.")
+             "after which bid >= ask. `dropped lines` counts lines the reader could "
+             "not use (unparseable, no integer `t_ns`, or no message and no marker).")
     L.append("")
+    lines = [x for x in (integrity_line(d) for d in days) if x]
+    if lines:
+        L.append("Every file is hashed and its lines counted as it is read, and the "
+                 "result is compared with the manifest:")
+        L.append("")
+        L.extend(lines)
+        L.append("")
+    if results.get("skipped"):
+        L.append("Not analysed:")
+        L.append("")
+        for sk in results["skipped"]:
+            L.append(skipped_line(sk))
+        L.append("")
 
     # ---- (a) ------------------------------------------------------------
     L.append("## (a) CKS contemporaneous replication")

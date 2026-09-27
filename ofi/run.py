@@ -22,7 +22,7 @@ import numpy as np
 
 from . import fees, inference, leadlag
 from .bars import concat_bars
-from .io import iter_files
+from .io import DROP_REASONS, iter_files
 from .pipeline import rebuild
 
 FEATURES = ("ofi", "mlofi", "micro", "tflow")
@@ -227,22 +227,86 @@ def _coinbase_mid_arrays(events) -> tuple[np.ndarray, np.ndarray]:
     return np.asarray(ts, dtype=np.int64), np.asarray(ms, dtype=float)
 
 
+def hour_of(key: str) -> str:
+    """'data/coinbase/BTC-USD/20260901-13.jsonl.gz' -> '20260901-13'."""
+    name = Path(key).name
+    return name[:-len(".jsonl.gz")] if name.endswith(".jsonl.gz") else name
+
+
+def file_integrity(files: list, tallies: list) -> tuple[list, dict]:
+    """Compare what was read from each file with its manifest entry.
+
+    `files` is a group's [(key, path, entry)], `tallies` the matching
+    ofi.io tallies in the same order. A file is "ok" when the sha256 of the
+    decompressed stream that was read equals the entry's content_sha256,
+    or, for an entry that has none, when the gzip sha256 does. Returns
+    (per-file records for results.json, a per-day summary).
+    """
+    out, problems = [], []
+    pinned = set()
+    for (key, _, e), t in zip(files, tallies):
+        if not t["complete"]:
+            status = "not read to the end"
+        elif e.get("content_sha256"):
+            pinned.add("content_sha256")
+            status = ("ok" if t["content_sha256"] == e["content_sha256"]
+                      else "content differs")
+        elif e.get("sha256"):
+            pinned.add("sha256")
+            status = "ok" if t["sha256"] == e["sha256"] else "gzip sha256 differs"
+        else:
+            status = "no hash in the manifest"
+        if t["torn"]:
+            status += ", torn tail"
+        rec = {"path": key, "sha256": (e.get("sha256") or "")[:12],
+               "bytes": e.get("bytes"),
+               "content_sha256": (e.get("content_sha256") or "")[:12],
+               "read_sha256": (t["sha256"] or "")[:12],
+               "read_content_sha256": (t["content_sha256"] or "")[:12],
+               "lines": t["lines"], "lines_listed": e.get("lines"),
+               "status": status}
+        out.append(rec)
+        if not status.startswith("ok"):
+            problems.append({"file": hour_of(key), "status": status,
+                             "lines": t["lines"], "lines_listed": e.get("lines")})
+    summary = {"read": len(out),
+               "ok": sum(1 for r in out if r["status"].startswith("ok")),
+               "pinned_by": "+".join(sorted(pinned)) or None,
+               "problems": problems}
+    return out, summary
+
+
 def analyse_day(key: tuple, group: dict, hl_groups: dict, params: dict,
                 log=print) -> tuple[dict, dict]:
     ex, sym, day = key
     paths = [p for _, p, _ in group["files"]]
     sources = sorted({e.get("source", "?") for _, _, e in group["files"]})
     log(f"  {ex}/{sym}/{day}: {len(paths)} file(s), source {','.join(sources)}")
-    bars, stats = rebuild(iter_files(paths), params["bar_s"],
+    tallies: list = []
+    bars, stats = rebuild(iter_files(paths, tallies), params["bar_s"],
                           params["max_gap_s"], params["k_levels"], product=sym)
+    files, integ = file_integrity(group["files"], tallies)
+    integ["listed"] = len(group["files"]) + len(group["missing"])
+    integ["missing"] = [hour_of(k) for k in group["missing"]]
+    integ["clean"] = not integ["missing"] and not integ["problems"]
+    stats["dropped_lines"] = {r: sum(t["dropped"][r] for t in tallies)
+                              for r in DROP_REASONS}
+    stats["n_dropped_lines"] = sum(stats["dropped_lines"].values())
+    stats["n_lines_read"] = sum(t["lines"] for t in tallies)
     log(f"    {stats['n_msgs']:,} msgs, {stats['bars']:,} bars, "
         f"{stats['segments']} segment(s), {stats['n_snapshots']} snapshot(s)")
+    log(f"    integrity: {integ['ok']} of {integ['listed']} listed file(s) match "
+        f"the manifest; missing {integ['missing'] or 'none'}; "
+        f"{stats['n_dropped_lines']:,} line(s) dropped")
+    for pr in integ["problems"]:
+        log(f"    WARNING {pr['file']}: {pr['status']} "
+            f"(lines read {pr['lines']:,}, listed {pr['lines_listed']})")
     res = {
         "key": f"{ex}/{sym}/{day}", "exchange": ex, "symbol": sym, "day": day,
         "sources": sources,
-        "files": [{"path": k, "sha256": e.get("sha256", "")[:12],
-                   "bytes": e.get("bytes")} for k, _, e in group["files"]],
+        "files": files,
         "missing": group["missing"],
+        "integrity": integ,
         "stats": {k: v for k, v in stats.items() if k != "snapshot_checks"},
         "snapshot_checks": stats["snapshot_checks"][:200],
         "cks": cks_block(bars, params) if stats["bars"] else {},
